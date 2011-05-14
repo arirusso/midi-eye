@@ -1,0 +1,6 @@
+*.gem
+.idea
+.idea/*/**
+.loadpath
+.project
+midi-eye.gemspec

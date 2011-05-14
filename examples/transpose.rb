@@ -3,7 +3,6 @@ $:.unshift File.join( File.dirname( __FILE__ ), '../lib')
 
 require 'midi-eye'
 require 'unimidi'
-require 'midi-message'
 
 class Transpose
 
@@ -34,4 +33,4 @@ p "use control-c to quit..."
 output = UniMIDI::Output.first.open
 input = UniMIDI::Input.first.open 
 
-Transpose.new(input, output).start
+Transpose.new(input, output).run

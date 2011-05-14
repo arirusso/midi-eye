@@ -1,6 +1,6 @@
 = midi-eye
 
-MIDI stream listener for Ruby
+Transparent MIDI event listener for Ruby
 
 == Requirements
 
@@ -21,7 +21,6 @@ MIDI stream listener for Ruby
   # and sends it to another UniMIDI output, transposed up an octave
 
   require 'midi-eye'  
-  require 'midi-message'
   require 'unimidi'
 
   class Transpose
@@ -51,7 +50,13 @@ MIDI stream listener for Ruby
   output = UniMIDI::Output.first.open
   input = UniMIDI::Input.first.open 
 
-  Transpose.new(input, output).start
+  Transpose.new(input, output).run
+  
+  # You can also run the listener only in a background thread by using:
+  
+  Transpose.new(input, output).run(:background => true)
+  
+  # This will allow you to run multiple listeners concurrently
 
 
 == Author

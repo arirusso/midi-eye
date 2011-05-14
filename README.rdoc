@@ -5,7 +5,7 @@ MIDI stream listener for Ruby
 == Requirements
 
 * {midi-message}[http://github.com/arirusso/midi-message] (gem install midi-message)
-* {nibbler}[http://github.com/arirusso/nibbler]
+* {nibbler}[http://github.com/arirusso/nibbler] (gem install midi-nibbler)
 
 == Recommended
 

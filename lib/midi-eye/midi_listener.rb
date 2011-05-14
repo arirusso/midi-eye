@@ -10,6 +10,8 @@ module MIDIEye
     def initialize_midi_listener
       @parser ||= Nibbler.new
       @sources ||= []
+      @event_queue ||= []
+      @exit_background_requested = false
       @sources += self.class.sources.map do |hash|
         klass = case hash[:type]
           when :unimidi then UniMIDIInput
@@ -22,7 +24,10 @@ module MIDIEye
     
     def run(options = {})      
       listen!
-      @listener.join unless options[:background]
+      unless options[:background]
+        @listener.join        
+        trigger_event({ :method => :on_exit_background_thread, :message => nil })
+      end
     end
     
     def close
@@ -51,14 +56,20 @@ module MIDIEye
     def listen!   
       @listener = Thread.fork do       
         while true
+          Thread.exit if @exit_background_requested
           poll
+          trigger_event(@event_queue.pop) unless @event_queue.last.nil?
         end
       end
     end
     
+    def trigger_event(event)
+      send(event[:method], event[:message]) if respond_to?(event[:method])
+    end
+    
     def handle_event(event, message)
       condition = event[:condition].call(message) unless event[:condition].nil?
-      send(event[:method], message) if condition
+      @event_queue << { :method => event[:method], :message => message } if condition
     end
     
     module ClassMethods

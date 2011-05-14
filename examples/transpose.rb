@@ -22,8 +22,6 @@ class Transpose
     initialize_midi_listener
   end
 
-  private
-
   def on_note(event)
     p "from note #{event[:message].note} to #{(event[:message].note += 12)}"
     @output.puts(event[:message].to_a)

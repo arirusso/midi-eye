@@ -1,6 +1,6 @@
 = midi-eye
 
-MIDI Stream Listener for Ruby
+MIDI stream listener for Ruby
 
 == Requirements
 
@@ -40,8 +40,6 @@ MIDI Stream Listener for Ruby
       @output = output
       initialize_midi_listener
     end
-
-    private
 
     def on_note(event)
       p "from note #{event[:message].note} to #{(event[:message].note += 12)}"

@@ -1,0 +1,67 @@
+= midi-eye
+
+MIDI Stream Listener for Ruby
+
+== Requirements
+
+* {midi-message}[http://github.com/arirusso/midi-message] (gem install midi-message)
+* {nibbler}[http://github.com/arirusso/nibbler]
+
+== Recommended
+
+* {unimidi}[http://github.com/arirusso/unimidi] (gem install unimidi)
+
+== Install
+
+  gem install midi-eye
+	
+== Usage
+
+  # this is an example that takes any note-on messages from a UniMIDI input
+  # and sends it to another UniMIDI output, transposed up an octave
+
+  require 'midi-eye'  
+  require 'midi-message'
+  require 'unimidi'
+
+  class Transpose
+
+    include MIDIEye::Listener
+
+    attr_reader :input
+  
+    listen_on :input, 
+              :type => :unimidi
+
+    midi_event :on_note, :when => Proc.new { |e| e[:message].kind_of?(MIDIMessage::NoteOn) }
+  
+    def initialize(input, output, options = {})
+      @input = input
+      @output = output
+      initialize_midi_listener
+    end
+
+    private
+
+    def on_note(event)
+      p "from note #{event[:message].note} to #{(event[:message].note += 12)}"
+      @output.puts(event[:message].to_a)
+    end
+
+  end
+
+  output = UniMIDI::Output.first.open
+  input = UniMIDI::Input.first.open 
+
+  Transpose.new(input, output).start
+
+
+== Author
+
+* {Ari Russo}[http://github.com/arirusso] <ari.russo at gmail.com>
+
+== License
+
+Apache 2.0, See the file LICENSE
+
+Copyright (c) 2011 Ari Russo

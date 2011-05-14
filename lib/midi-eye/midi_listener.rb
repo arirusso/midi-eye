@@ -18,11 +18,11 @@ module MIDIEye
           klass.new(source)
         end
       end.flatten
-      listen!
     end
     
-    def start
-      @listener.join
+    def run(options = {})      
+      listen!
+      @listener.join unless options[:background]
     end
     
     def close

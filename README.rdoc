@@ -57,7 +57,8 @@ Transparent MIDI event listener for Ruby
   Transpose.new(input, output).run(:background => true)
   
   # This will allow you to run multiple listeners concurrently
-
+  
+  
 
 == Author
 

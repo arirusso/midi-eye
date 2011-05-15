@@ -25,8 +25,9 @@ module MIDIEye
     def run(options = {})      
       listen!
       unless options[:background]
+        trigger_event({ :method => :on_start_background_thread })
         @listener.join        
-        trigger_event({ :method => :on_exit_background_thread, :message => nil })
+        trigger_event({ :method => :on_exit_background_thread })
       end
     end
     
@@ -41,9 +42,9 @@ module MIDIEye
           unless raw_msg.nil?         
             objs = [@parser.parse(raw_msg[:data], :timestamp => raw_msg[:timestamp])].flatten.compact
             objs.each do |batch|
-              [batch[:messages]].flatten.each do |m|
-                hash = { :message => m, :timestamp => batch[:timestamp] }
-                events.each { |event| handle_event(event, hash) }
+              [batch[:messages]].flatten.each do |single_message|
+                data = { :message => single_message, :timestamp => batch[:timestamp] }
+                events.each { |name| queue_event(name, data) }
               end
             end 
           end
@@ -63,13 +64,17 @@ module MIDIEye
       end
     end
     
-    def trigger_event(event)
-      send(event[:method], event[:message]) if respond_to?(event[:method])
+    def trigger_queued_events
+      @event_queue.length.times { trigger_event(@event_queue.shift) }
     end
     
-    def handle_event(event, message)
+    def trigger_event(event)
+      send(event[:method], event[:event]) if self.respond_to?(event[:method])
+    end
+    
+    def queue_event(event, message)
       condition = event[:condition].call(message) unless event[:condition].nil?
-      @event_queue << { :method => event[:method], :message => message } if condition
+      @event_queue << { :method => event[:method], :event => message } if condition
     end
     
     module ClassMethods

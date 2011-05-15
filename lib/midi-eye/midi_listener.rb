@@ -61,6 +61,7 @@ module MIDIEye
           Thread.exit if @exit_background_requested
           poll
           trigger_queued_events unless @event_queue.empty?
+          sleep(1.0/1000.0)
         end
       end
     end

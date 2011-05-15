@@ -24,6 +24,7 @@ module MIDIEye
     
     def run(options = {})      
       listen!
+      #@listener.priority = 20
       unless options[:background]
         trigger_event({ :method => :on_start_background_thread })
         @listener.join        
@@ -56,7 +57,7 @@ module MIDIEye
     
     def listen!   
       @listener = Thread.fork do       
-        while true
+        loop do
           Thread.exit if @exit_background_requested
           poll
           trigger_queued_events unless @event_queue.empty?

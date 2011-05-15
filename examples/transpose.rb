@@ -14,6 +14,7 @@ class Transpose
             :type => :unimidi
 
   midi_event :on_note, :when => Proc.new { |e| e[:message].kind_of?(MIDIMessage::NoteOn) }
+  midi_event :on_note_off, :when => Proc.new { |e| e[:message].kind_of?(MIDIMessage::NoteOff) }
   
   def initialize(input, output, options = {})
     @input = input
@@ -21,8 +22,14 @@ class Transpose
     initialize_midi_listener
   end
 
-  def on_note(event)
-    p "from note #{event[:message].note} to #{(event[:message].note += 12)}"
+  def on_note(event)    
+    p "from note #{event[:message].note} to #{(event[:message].note + 12)}"
+    event[:message].note += 12
+    @output.puts(event[:message].to_a)
+  end
+  
+  def on_note_off(event)
+    event[:message].note += 12
     @output.puts(event[:message].to_a)
   end
 

@@ -59,7 +59,7 @@ module MIDIEye
         while true
           Thread.exit if @exit_background_requested
           poll
-          trigger_event(@event_queue.pop) unless @event_queue.last.nil?
+          trigger_queued_events unless @event_queue.empty?
         end
       end
     end
@@ -73,7 +73,7 @@ module MIDIEye
     end
     
     def queue_event(event, message)
-      condition = event[:condition].call(message) unless event[:condition].nil?
+      condition = event[:condition].nil? ? true : event[:condition].call(message) 
       @event_queue << { :method => event[:method], :event => message } if condition
     end
     

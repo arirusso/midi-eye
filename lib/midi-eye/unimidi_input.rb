@@ -12,8 +12,8 @@ module MIDIEye
     
     def poll(&block)
       msgs = @device.buffer.slice(@pointer, @device.buffer.length - @pointer)
-      msgs.each { |raw_msg| block.call(raw_msg) }
-      @pointer = @device.buffer.length      
+      @pointer = @device.buffer.length
+      msgs.each { |raw_msg| yield(raw_msg) }            
     end
     
   end

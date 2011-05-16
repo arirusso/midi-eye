@@ -1,51 +1,46 @@
 #!/usr/bin/env ruby
 module MIDIEye
   
-  module Listener
+  class Listener
     
     def self.included(base)
       base.extend(ClassMethods)
     end
     
-    def initialize_midi_listener
-      @parser ||= Nibbler.new
-      @sources ||= []
-      @event_queue ||= []
-      @exit_background_requested = false
-      @sources += self.class.sources.map do |hash|
-        klass = case hash[:type]
-          when :unimidi then UniMIDIInput
-        end 
-        [send(hash[:sources])].flatten.map do |source|
-          klass.new(source)
-        end
-      end.flatten
+    def initialize(input)
+      @parser = Nibbler.new
+      @sources = []
+      @event_queue = []
+      @midi_events = []
+      
+      @exit_background_requested = false      
+      @sources += [input].flatten.map do |i|
+        UniMIDIInput.new(i)
+      end
     end
     
     def run(options = {})      
       listen!
-      #@listener.priority = 20
       unless options[:background]
-        trigger_event({ :method => :on_start_background_thread })
         @listener.join        
-        trigger_event({ :method => :on_exit_background_thread })
       end
     end
     
     def close
-      @listener.kill
+      @listener.kill unless @listener.nil?
     end
     
     def poll
-      events = self.class.midi_events
       @sources.each do |input|
         input.poll do |raw_msg|
           unless raw_msg.nil?         
             objs = [@parser.parse(raw_msg[:data], :timestamp => raw_msg[:timestamp])].flatten.compact
             objs.each do |batch|
               [batch[:messages]].flatten.each do |single_message|
-                data = { :message => single_message, :timestamp => batch[:timestamp] }
-                events.each { |name| queue_event(name, data) }
+                unless single_message.nil?
+                  data = { :message => single_message, :timestamp => batch[:timestamp] }
+                  @midi_events.each { |name| queue_event(name, data) }
+                end
               end
             end 
           end
@@ -53,7 +48,12 @@ module MIDIEye
       end
     end
     
-    protected
+    def on_message(options = {}, &proc)
+      return if options[:call_method].nil? && proc.nil?
+      @midi_events << { :method => options[:call_method], :proc => proc, :conditions => options }      
+    end
+    
+    private
     
     def listen!   
       @listener = Thread.fork do       
@@ -61,7 +61,7 @@ module MIDIEye
           Thread.exit if @exit_background_requested
           poll
           trigger_queued_events unless @event_queue.empty?
-          sleep(1.0/1000.0)
+          sleep(1.0/1000.0) # 1ms
         end
       end
     end
@@ -70,29 +70,25 @@ module MIDIEye
       @event_queue.length.times { trigger_event(@event_queue.shift) }
     end
     
+    def meets_conditions?(conditions, message)
+      !conditions.map do |key, value|
+        value.kind_of?(Array) ? value.include?(message.send(key)) : value.eql?(message.send(key)) 
+      end.include?(false)
+    end
+    
     def trigger_event(event)
-      send(event[:method], event[:event]) if self.respond_to?(event[:method])
+      action = event[:action]
+      return unless meets_conditions?(action[:conditions], event[:message][:message]) || action[:conditions].nil?
+      unless action[:method].nil? || !self.respond_to?(action[:method])
+        send(action[:method], event[:message]) 
+      else
+        action[:proc].call(event[:message])
+      end
     end
     
     def queue_event(event, message)
-      condition = event[:condition].nil? ? true : event[:condition].call(message) 
-      @event_queue << { :method => event[:method], :event => message } if condition
-    end
-    
-    module ClassMethods
-      
-      attr_reader :midi_events, :sources
-      
-      def midi_event(method, options = {})
-        @midi_events ||= []
-        @midi_events << { :method => method, :condition => options[:when] }
-      end
-      
-      def listen_on(sources, options)
-        @sources ||= []
-        @sources << { :sources => sources, :type => options[:type] }
-      end
-      
+      #condition = event[:condition].nil? ? false : event[:condition].call(message)  
+      @event_queue << { :action => event, :message => message } #if condition
     end
                 
   end  

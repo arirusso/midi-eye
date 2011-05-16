@@ -6,9 +6,6 @@ Transparent MIDI event listener for Ruby
 
 * {midi-message}[http://github.com/arirusso/midi-message] (gem install midi-message)
 * {nibbler}[http://github.com/arirusso/nibbler] (gem install midi-nibbler)
-
-== Recommended
-
 * {unimidi}[http://github.com/arirusso/unimidi] (gem install unimidi)
 
 == Install
@@ -20,46 +17,34 @@ Transparent MIDI event listener for Ruby
   # this is an example that takes any note-on messages from a UniMIDI input
   # and sends it to another UniMIDI output, transposed up an octave
 
-  require 'midi-eye'  
-  require 'unimidi'
+  require 'midi-eye'
 
-  class Transpose
+  include MIDIEye
+  include MIDIMessage 
 
-    include MIDIEye::Listener
+  @input = UniMIDI::Input.first.open
+  @output = UniMIDI::Output.first.open
 
-    attr_reader :input
+  transpose = Listener.new(@input)
+
+  transpose.on_message(:class => [NoteOn, NoteOff]) do |event|
+   
+    p "from #{event[:message].note} to #{(event[:message].note + 12)}"
   
-    listen_on :input, 
-              :type => :unimidi
-
-    midi_event :on_note, :when => Proc.new { |e| e[:message].kind_of?(MIDIMessage::NoteOn) }
+    event[:message].note += 12
+    @output.puts(event[:message].to_bytes)
   
-    def initialize(input, output, options = {})
-      @input = input
-      @output = output
-      initialize_midi_listener
-    end
-
-    def on_note(event)
-      p "from note #{event[:message].note} to #{(event[:message].note += 12)}"
-      @output.puts(event[:message].to_a)
-    end
-
   end
 
-  output = UniMIDI::Output.first.open
-  input = UniMIDI::Input.first.open 
-
-  Transpose.new(input, output).run
+  transpose.run
   
   # You can also run the listener only in a background thread by using:
   
-  Transpose.new(input, output).run(:background => true)
+  Transpose.run(:background => true)
   
   # This will allow you to run multiple listeners concurrently
   
-  
-
+    
 == Author
 
 * {Ari Russo}[http://github.com/arirusso] <ari.russo at gmail.com>

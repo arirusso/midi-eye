@@ -4,9 +4,9 @@ Transparent MIDI event listener for Ruby
 
 == Requirements
 
-* {midi-message}[http://github.com/arirusso/midi-message] (gem install midi-message)
-* {nibbler}[http://github.com/arirusso/nibbler] (gem install midi-nibbler)
-* {unimidi}[http://github.com/arirusso/unimidi] (gem install unimidi)
+* {midi-message}[http://github.com/arirusso/midi-message]
+* {nibbler}[http://github.com/arirusso/nibbler]
+* {unimidi}[http://github.com/arirusso/unimidi]
 
 == Install
 
@@ -42,10 +42,9 @@ Transparent MIDI event listener for Ruby
   
   Transpose.run(:background => true)
   
-  # This will allow you to run multiple listeners concurrently
+  # This will allow you to run multiple listeners at the same time
   
-  see more examples {here}[http://github.com/arirusso/midi-eye/tree/master/examples]
-  
+see more examples {here}[http://github.com/arirusso/midi-eye/tree/master/examples]  
     
 == Author
 

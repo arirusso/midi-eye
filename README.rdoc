@@ -14,8 +14,8 @@ Transparent MIDI event listener for Ruby
 	
 == Usage
 
-  # this is an example that takes any note messages from a unimidi input,
-  # transposes them up an octave, and then sends them to a unimidi output
+  # this is an example that takes any note messages from a unimidi input
+  # and sends them to an output transposed up one octave
 
   require 'midi-eye'
 

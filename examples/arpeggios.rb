@@ -25,16 +25,16 @@ output = UniMIDI::Output.first.open
 
 @clock.on_message(:name => "Clock") do |event|
     
-    if @message_counter.eql?(@ticks_per_note) 
-      type = @note_on ? NoteOn : NoteOff
-      note = type.new(0, @notes[@note_counter], 64)   
-      output.puts(note.to_bytes)
-      @note_on=!@note_on      
-      @note_counter = (@note_counter < (@notes.length-1) ? @note_counter + 1 : 0) if @note_on
-      @message_counter = 0
-    else
-      @message_counter += 1
-    end
+  if @message_counter.eql?(@ticks_per_note) 
+    type = @note_on ? NoteOn : NoteOff
+    note = type.new(0, @notes[@note_counter], 64)   
+    output.puts(note.to_bytes)
+    @note_on=!@note_on      
+    @note_counter = (@note_counter < (@notes.length-1) ? @note_counter + 1 : 0) if @note_on
+    @message_counter = 0
+  else
+    @message_counter += 1
+  end
 
 end
   

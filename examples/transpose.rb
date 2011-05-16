@@ -1,4 +1,9 @@
 #!/usr/bin/env ruby
+#
+# this is an example that takes any note-on messages from a UniMIDI input
+# and sends it to another UniMIDI output, transposed up an octave
+#
+#
 $:.unshift File.join( File.dirname( __FILE__ ), '../lib')
 
 require 'midi-eye'

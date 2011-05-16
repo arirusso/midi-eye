@@ -44,6 +44,8 @@ Transparent MIDI event listener for Ruby
   
   # This will allow you to run multiple listeners concurrently
   
+  see more examples {here}[http://github.com/arirusso/midi-eye/tree/master/examples]
+  
     
 == Author
 

@@ -1,7 +1,7 @@
 #!/usr/bin/env ruby
 #
-# this is an example that takes any note-on messages from a UniMIDI input
-# and sends it to another UniMIDI output, transposed up an octave
+# this is an example that takes any note messages from a unimidi input,
+# transposes them up an octave and sends them to a unimidi output
 #
 #
 $:.unshift File.join( File.dirname( __FILE__ ), '../lib')

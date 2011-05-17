@@ -16,6 +16,13 @@ module MIDIEye
       msgs.each { |raw_msg| yield(raw_msg) }            
     end
     
+    def self.is_compatible?(input)
+      klass = input.class.name.split("::").first
+      klass.eql?("UniMIDI")
+    end
+    
+    Listener.input_types << self 
+    
   end
             
 end

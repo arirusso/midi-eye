@@ -9,7 +9,7 @@ require 'midi-message'
 require 'nibbler'
 require 'unimidi'
 
-require 'midi-eye/midi_listener'
+require 'midi-eye/listener'
 require 'midi-eye/unimidi_input'
 
 module MIDIEye

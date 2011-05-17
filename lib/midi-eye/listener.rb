@@ -2,27 +2,30 @@
 module MIDIEye
   
   class Listener
-    
-    def self.included(base)
-      base.extend(ClassMethods)
+      
+    @input_types = []
+      
+    class << self
+      attr_reader :input_types      
     end
-    
-    def initialize(input)
+        
+    def initialize(input, options = {})
       @parser = Nibbler.new
       @sources = []
       @event_queue = []
       @midi_events = []
-      
+            
       @exit_background_requested = false      
       @sources += [input].flatten.map do |i|
-        UniMIDIInput.new(i)
+        klass = self.class.input_types.find { |type| type.is_compatible?(i) }
+        klass.new(i)
       end
     end
     
     def run(options = {})      
       listen!
       unless options[:background]
-        @listener.join        
+        @listener.join  
       end
     end
     
@@ -33,7 +36,7 @@ module MIDIEye
     def poll
       @sources.each do |input|
         input.poll do |raw_msg|
-          unless raw_msg.nil?         
+          unless raw_msg.nil?        
             objs = [@parser.parse(raw_msg[:data], :timestamp => raw_msg[:timestamp])].flatten.compact
             objs.each do |batch|
               [batch[:messages]].flatten.each do |single_message|
@@ -54,14 +57,15 @@ module MIDIEye
     end
     
     private
-    
+        
     def listen!   
+      t = 1.0/1000
       @listener = Thread.fork do       
         loop do
           Thread.exit if @exit_background_requested
           poll
           trigger_queued_events unless @event_queue.empty?
-          sleep(1.0/1000.0) # 1ms
+          sleep(t)
         end
       end
     end

@@ -16,25 +16,25 @@ A transparent MIDI input event listener for Ruby
 
   require 'midi-eye'
 
-this is an example that takes any note messages received from a unimidi input, transposes them up one octave
+This is an example that takes any note messages received from a unimidi input, transposes them up one octave
 and then sends them to an output  
   
-first, initialize the MIDI IO ports
+First, initialize the MIDI IO ports
   
   @input = UniMIDI::Input.first.open
   @output = UniMIDI::Output.first.open
   
-then create a listener for the input port
+Then create a listener for the input port
  
   transpose = MIDIEye::Listener.new(@input)
 
-you can bind an event to the listener using Listener#listen_for
+You can bind an event to the listener using Listener#listen_for
 
-the listener will try to positively match the parameters you pass in to the properties of the messages it receives
+The listener will try to positively match the parameters you pass in to the properties of the messages it receives
 
-in this example, we will tell it to look for note on/off messages
+In this example, we will tell it to look for note on/off messages
 
-you also have the option of leaving out the parameters altogether and including a conditional in your callback (eg if event[:message].class.eql?(NoteOn) do... etc)
+You also have the option of leaving out the parameters altogether and including a conditional in your callback (eg if event[:message].class.eql?(NoteOn) do... etc)
 
   transpose.listen_for(:class => [MIDIMessage::NoteOn, MIDIMessage::NoteOff]) do |event|
    
@@ -46,17 +46,17 @@ you also have the option of leaving out the parameters altogether and including 
   
   end
   
-you can bind as many events to a listener as you wish, just keep calling listen_for
+You can bind as many events to a listener as you wish, just keep calling Listener#listen_for
 
-now start the listener
+Once all the events are bound, start the listener
     
   transpose.run
-  
-or have the listener run only in a background thread by using :background => true.  this will allow you to run multiple listeners at the same time, ie if you're trying to listen on multiple input ports
+   
+The listener can also be run in a background thread by using :background => true.  This is useful for example if you wanted to run more than one listener on multiple inputs.
 
   Transpose.run(:background => true)
   
-see another example {here}[http://github.com/arirusso/midi-eye/blob/master/examples/arpeggios.rb] that deals with MIDI clock sync  
+See another example {here}[http://github.com/arirusso/midi-eye/blob/master/examples/arpeggios.rb] that deals with MIDI clock sync  
 
 == Documentation
 

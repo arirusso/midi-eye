@@ -19,6 +19,7 @@ A transparent MIDI input event listener for Ruby
   # this is an example that takes any note messages received from a unimidi input
   # transposes them up one octave
   # and then sends them to an output
+  #
   
   require 'midi-eye'
   
@@ -54,16 +55,18 @@ A transparent MIDI input event listener for Ruby
   
   end
   
-  # note that you can bind as many events to a listener as you wish
-
+  #
+  # you can bind as many events to a listener as you wish, just keep calling listen_for
+  #
+  
   #
   # now start the listener
   #    
   transpose.run
   
   #
-  # or have the listener run only in a background thread by using
-  # this will allow you to run multiple listeners at the same time for instance, if you're
+  # or have the listener run only in a background thread by using :background => true
+  # this will allow you to run multiple listeners at the same time, ie if you're
   # trying to listen on multiple input ports
   #
   Transpose.run(:background => true)

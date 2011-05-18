@@ -1,6 +1,6 @@
 = midi-eye
 
-Transparent MIDI event listener for Ruby 
+A transparent MIDI input event listener for Ruby 
 
 == Requirements
 

@@ -1,8 +1,9 @@
 #!/usr/bin/env ruby
 #
 # midi-eye
-# MIDI event listener for Ruby
-# (c)2011 Ari Russo and licensed under the Apache 2.0 License
+# Transparent MIDI event listener for Ruby
+# (c)2011 Ari Russo 
+# licensed under the Apache 2.0 License
 # 
 
 require 'midi-message'
@@ -14,6 +15,6 @@ require 'midi-eye/unimidi_input'
 
 module MIDIEye
   
-  VERSION = "0.0.5"
+  VERSION = "0.0.6"
   
 end

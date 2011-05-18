@@ -52,7 +52,7 @@ Once all the events are bound, start the listener
     
   transpose.run
    
-The listener can also be run in a background thread by using :background => true.  This is useful for example if you wanted to run more than one listener on multiple inputs.
+A listener can also be run in a background thread by using :background => true.
 
   Transpose.run(:background => true)
   

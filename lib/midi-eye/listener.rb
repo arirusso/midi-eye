@@ -30,10 +30,12 @@ module MIDIEye
         @listener.join  
       end
     end
+    alias_method :start, :run
     
     def close
       @listener.kill unless @listener.nil?
     end
+    alias_method :stop, :close
     
     def poll
       @sources.each do |input|

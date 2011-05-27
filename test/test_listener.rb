@@ -56,4 +56,22 @@ class ListenerTest < Test::Unit::TestCase
     end
   end
 
+  def test_listen_for_sysex
+    sleep(0.5)
+    TestOutput.open do |output|
+      TestInput.open do |input|
+        listener = Listener.new(input)
+        listener.listen_for(:class => SystemExclusive::Command) do |event|
+          assert_equal(SystemExclusive::Command, event[:message].class)
+          assert_equal([0xF0, 0x41, 0x10, 0x42, 0x12, 0x40, 0x00, 0x7F, 0x00, 0x41, 0xF7], event[:message].to_byte_array)
+          listener.close  
+        end
+        listener.start(:background => true)
+        sleep(0.1)
+        output.puts(0xF0, 0x41, 0x10, 0x42, 0x12, 0x40, 0x00, 0x7F, 0x00, 0x41, 0xF7)
+        listener.join
+      end
+    end
+  end
+  
 end

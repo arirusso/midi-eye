@@ -38,6 +38,10 @@ module MIDIEye
     end
     alias_method :stop, :close
     
+    def join
+      @listener.join
+    end
+    
     def poll
       @sources.each do |input|
         input.poll do |raw_msg|

@@ -20,7 +20,7 @@ module MIDIEye
       @exit_background_requested = false      
       @sources += [input].flatten.map do |i|
         klass = self.class.input_types.find { |type| type.is_compatible?(i) }
-        raise "Input class type not recognized" if klass.nil?
+        raise "Input class type #{i.class.name} not compatible" if klass.nil?
         klass.new(i)
       end
     end

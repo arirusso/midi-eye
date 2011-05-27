@@ -29,7 +29,8 @@ class ListenerTest < Test::Unit::TestCase
           listener.close
         end
         listener.start(:background => true)
-        output.puts(0x90, 0x10, 0x05)
+        sleep(0.1)
+        output.puts(0x90, 0x40, 0x10)
         listener.join
       end
     end
@@ -48,6 +49,7 @@ class ListenerTest < Test::Unit::TestCase
           listener.close  
         end
         listener.start(:background => true)
+        sleep(0.1)
         output.puts(0x90, 0x50, 0x40)
         listener.join
       end

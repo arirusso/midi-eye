@@ -20,10 +20,9 @@ module MIDIEye
       msgs.each { |raw_msg| yield(raw_msg) }            
     end
     
-    # if <em>input</em> is a unimidi input, this returns true
+    # if <em>input</em> looks like a unimidi input, this returns true
     def self.is_compatible?(input)
-      klass = input.class.name.split("::").first
-      klass.eql?("UniMIDI")
+      input.respond_to?(:gets) && input.respond_to?(:buffer)
     end
     
     # add this class to the Listener class' known input types

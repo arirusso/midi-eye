@@ -8,6 +8,7 @@ module MIDIEye
     @input_types = []
       
     class << self
+      # a registry of input types
       attr_reader :input_types      
     end
         
@@ -25,23 +26,38 @@ module MIDIEye
       end
     end
     
+    # start the listener. pass in :background => true to run only in a background thread. returns self
     def run(options = {})      
       listen!
       unless options[:background]
         @listener.join  
       end
+      self
     end
     alias_method :start, :run
     
+    # stop the listener. returns self
     def close
       @listener.kill unless @listener.nil?
+      self
     end
     alias_method :stop, :close
     
+    # join the listener if it's being run in the background. returns self
     def join
       @listener.join
+      self
     end
     
+    # add an event to listen for. returns self
+    def listen_for(options = {}, &proc)
+      return if options[:call_method].nil? && proc.nil?
+      @events << { :method => options[:call_method], :proc => proc, :conditions => options }
+      self      
+    end
+    alias_method :on_message, :listen_for
+    
+    # poll the input source for new input. this will normally be done by the background thread 
     def poll
       @sources.each do |input|
         input.poll do |raw_msg|
@@ -59,15 +75,10 @@ module MIDIEye
         end
       end
     end
-    
-    def listen_for(options = {}, &proc)
-      return if options[:call_method].nil? && proc.nil?
-      @events << { :method => options[:call_method], :proc => proc, :conditions => options }      
-    end
-    alias_method :on_message, :listen_for
-    
+
     private
-        
+    
+    # start the background listener thread    
     def listen!   
       t = 1.0/1000
       @listener = Thread.fork do       
@@ -80,16 +91,19 @@ module MIDIEye
       end
     end
     
+    # trigger all queued events
     def trigger_queued_events
       @event_queue.length.times { trigger_event(@event_queue.shift) }
     end
     
+    # does <em>message</em> meet <em>conditions</em>?
     def meets_conditions?(conditions, message)
       !conditions.map do |key, value|
         value.kind_of?(Array) ? value.include?(message.send(key)) : value.eql?(message.send(key)) 
       end.include?(false)
     end
     
+    # trigger an event
     def trigger_event(event)
       action = event[:action]
       return unless meets_conditions?(action[:conditions], event[:message][:message]) || action[:conditions].nil?
@@ -100,6 +114,7 @@ module MIDIEye
       end
     end
     
+    # add an event to the trigger queue 
     def queue_event(event, message)  
       @event_queue << { :action => event, :message => message }
     end

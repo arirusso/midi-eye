@@ -13,7 +13,6 @@ module MIDIEye
     end
         
     def initialize(input, options = {})
-      @parser = Nibbler.new
       @sources = []
       @event_queue = []
       @events = []
@@ -60,15 +59,12 @@ module MIDIEye
     # poll the input source for new input. this will normally be done by the background thread 
     def poll
       @sources.each do |input|
-        input.poll do |raw_msg|
-          unless raw_msg.nil?        
-            objs = [@parser.parse(raw_msg[:data], :timestamp => raw_msg[:timestamp])].flatten.compact
-            objs.each do |batch|
-              [batch[:messages]].flatten.each do |single_message|
-                unless single_message.nil?
-                  data = { :message => single_message, :timestamp => batch[:timestamp] }
-                  @events.each { |name| queue_event(name, data) }
-                end
+        input.poll do |objs|
+          objs.each do |batch|
+            [batch[:messages]].flatten.each do |single_message|
+              unless single_message.nil?
+                data = { :message => single_message, :timestamp => batch[:timestamp] }
+                @events.each { |name| queue_event(name, data) }
               end
             end 
           end

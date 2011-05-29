@@ -8,7 +8,8 @@ module MIDIEye
     
     attr_reader :device, :pointer
     
-    def initialize(input)      
+    def initialize(input)   
+      @parser = Nibbler.new   
       @pointer = 0      
       @device = input      
     end
@@ -17,7 +18,12 @@ module MIDIEye
     def poll(&block)
       msgs = @device.buffer.slice(@pointer, @device.buffer.length - @pointer)
       @pointer = @device.buffer.length
-      msgs.each { |raw_msg| yield(raw_msg) }            
+      msgs.each do |raw_msg| 
+        unless raw_msg.nil?        
+          objs = [@parser.parse(raw_msg[:data], :timestamp => raw_msg[:timestamp])].flatten.compact
+          yield(objs)
+        end
+      end    
     end
     
     # if <em>input</em> looks like a unimidi input, this returns true

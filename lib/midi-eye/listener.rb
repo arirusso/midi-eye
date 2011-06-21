@@ -55,6 +55,7 @@ module MIDIEye
       self      
     end
     alias_method :on_message, :listen_for
+    alias_method :listen, :listen_for
     
     # poll the input source for new input. this will normally be done by the background thread 
     def poll

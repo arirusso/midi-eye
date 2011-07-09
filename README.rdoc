@@ -41,7 +41,7 @@ You also have the option of leaving out the parameters altogether and including 
     event[:message].note += 12
     
     # send the altered note message to the output you chose earlier 
-    @output.puts(event[:message].to_bytes)
+    @output.puts(event[:message])
   
   end
   

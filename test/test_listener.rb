@@ -74,6 +74,15 @@ class ListenerTest < Test::Unit::TestCase
     assert_equal(true, listener.uses_input?(input))    
   end
   
+  def test_reject_dup_input
+    sleep(0.2)
+    output = $test_device[:output]
+    input = $test_device[:input]
+    listener = Listener.new(input)
+    listener.add_input(input)
+    assert_equal(1, listener.sources.size)     
+  end
+  
   def test_remove_input
     sleep(0.2)
     output = $test_device[:output]

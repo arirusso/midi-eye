@@ -33,7 +33,7 @@ module MIDIEye
         klass = self.class.input_types.find { |type| type.is_compatible?(i) }
         raise "Input class type #{i.class.name} not compatible" if klass.nil?
         klass.new(i) unless uses_input?(i)
-      end
+      end.compact
     end
     
     # remove a source

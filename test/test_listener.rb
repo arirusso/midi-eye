@@ -8,7 +8,30 @@ class ListenerTest < Test::Unit::TestCase
   include MIDIMessage
   include TestHelper
   
-  def match_control_change_message
+  def test_rapid_control_change_message
+    sleep(0.2)
+    output = $test_device[:output]
+    input = $test_device[:input]
+    listener = Listener.new(input)
+    @i = 0
+    listener.listen_for(:class => ControlChange) do |event|
+      @i += 1
+      if @i == 5 * 126
+        close_all(input, output, listener)
+        assert_equal(5 * 126, @i)
+      end
+    end
+    listener.start(:background => true)
+    sleep(0.5)
+    5.times do
+      126.times do |i|
+        output.puts(176, 1, i+1)
+      end
+    end
+    listener.join    
+  end
+  
+  def test_control_change_message
     sleep(0.2)
     output = $test_device[:output]
     input = $test_device[:input]

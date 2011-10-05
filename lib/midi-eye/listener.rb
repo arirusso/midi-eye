@@ -89,6 +89,7 @@ module MIDIEye
     def listen!   
       t = 1.0/1000
       @listener = Thread.fork do       
+        Thread.abort_on_exception = true
         loop do
           #Thread.exit if @exit_background_requested
           poll
@@ -106,7 +107,7 @@ module MIDIEye
     # does <em>message</em> meet <em>conditions</em>?
     def meets_conditions?(conditions, message)
       !conditions.map do |key, value|
-        value.kind_of?(Array) ? value.include?(message.send(key)) : value.eql?(message.send(key)) 
+        message.respond_to?(key) && (value.kind_of?(Array) ? value.include?(message.send(key)) : value.eql?(message.send(key))) 
       end.include?(false)
     end
     

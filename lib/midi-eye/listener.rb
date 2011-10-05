@@ -114,12 +114,9 @@ module MIDIEye
     # trigger an event
     def trigger_event(event)
       action = event[:action]
-      return unless meets_conditions?(action[:conditions], event[:message][:message]) || action[:conditions].nil?
-      #unless action[:method].nil? || !self.respond_to?(action[:method])
-      #  send(action[:method], event[:message]) 
-      #else
-      action[:proc].call(event[:message])
-      #end
+      if meets_conditions?(action[:conditions], event[:message][:message]) || action[:conditions].nil?
+        action[:proc].call(event[:message])
+      end
     end
     
     # add an event to the trigger queue 

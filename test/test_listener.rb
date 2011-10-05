@@ -8,6 +8,24 @@ class ListenerTest < Test::Unit::TestCase
   include MIDIMessage
   include TestHelper
   
+  def match_control_change_message
+    sleep(0.2)
+    output = $test_device[:output]
+    input = $test_device[:input]
+    listener = Listener.new(input)
+    listener.listen_for(:class => ControlChange) do |event|
+      assert_equal(ControlChange, event[:message].class)
+      assert_equal(1, event[:message].index)      
+      assert_equal(35, event[:message].value)
+      assert_equal([176, 1, 35], event[:message].to_bytes)
+      close_all(input, output, listener)
+    end
+    listener.start(:background => true)
+    sleep(0.5)
+    output.puts(176, 1, 35)
+    listener.join    
+  end
+  
   def test_delete_event
     sleep(0.2)
     output = $test_device[:output]

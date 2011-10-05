@@ -18,10 +18,25 @@ module MIDIEye
       @event_queue = []
       @events = []
   
+      add_input(input)
+    end
+    
+    # add a source
+    # takes a raw input or array of
+    def add_input(input)
       @sources += [input].flatten.map do |i|
         klass = self.class.input_types.find { |type| type.is_compatible?(i) }
         raise "Input class type #{i.class.name} not compatible" if klass.nil?
         klass.new(i)
+      end
+    end
+    
+    # remove a source
+    # takes a raw input or array of
+    def remove_input(inputs)
+      to_remove = [inputs].flatten
+      to_remove.each do |input|
+        @sources.delete_if { |source| source.uses?(input) }
       end
     end
     

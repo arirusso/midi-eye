@@ -31,6 +31,11 @@ module MIDIEye
       input.respond_to?(:gets) && input.respond_to?(:buffer)
     end
     
+    # if this source was created from <em>input</em>
+    def uses?(input)
+      @device == input
+    end
+    
     # add this class to the Listener class' known input types
     Listener.input_types << self 
     

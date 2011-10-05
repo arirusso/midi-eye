@@ -66,13 +66,13 @@ class ListenerTest < Test::Unit::TestCase
     listener.join 
   end
   
-  def test_delete_source
+  def test_remove_input
     sleep(0.2)
     output = $test_device[:output]
     input = $test_device[:input]
     listener = Listener.new(input)
     assert_equal(1, listener.sources.size)
-    listener.sources.clear
+    listener.remove_input(input)
     assert_equal(0, listener.sources.size)  
   end
   

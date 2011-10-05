@@ -50,8 +50,10 @@ module MIDIEye
     
     # add an event to listen for. returns self
     def listen_for(options = {}, &proc)
-      return if options[:call_method].nil? && proc.nil?
-      @events << { :method => options[:call_method], :proc => proc, :conditions => options }
+      raise 'listener must have a block' if proc.nil?
+      name = options[:name]
+      options.delete(:name)
+      @events << { :conditions => options, :proc => proc, :name => name }
       self      
     end
     alias_method :on_message, :listen_for
@@ -104,11 +106,11 @@ module MIDIEye
     def trigger_event(event)
       action = event[:action]
       return unless meets_conditions?(action[:conditions], event[:message][:message]) || action[:conditions].nil?
-      unless action[:method].nil? || !self.respond_to?(action[:method])
-        send(action[:method], event[:message]) 
-      else
-        action[:proc].call(event[:message])
-      end
+      #unless action[:method].nil? || !self.respond_to?(action[:method])
+      #  send(action[:method], event[:message]) 
+      #else
+      action[:proc].call(event[:message])
+      #end
     end
     
     # add an event to the trigger queue 

@@ -17,7 +17,7 @@ module MIDIEye
       @event_queue = []
       @events = []
             
-      @exit_background_requested = false      
+      #@exit_background_requested = false      
       @sources += [input].flatten.map do |i|
         klass = self.class.input_types.find { |type| type.is_compatible?(i) }
         raise "Input class type #{i.class.name} not compatible" if klass.nil?
@@ -38,6 +38,9 @@ module MIDIEye
     # stop the listener. returns self
     def close
       @listener.kill unless @listener.nil?
+      @events.clear
+      @sources.clear
+      @event_queue.clear
       self
     end
     alias_method :stop, :close
@@ -82,7 +85,7 @@ module MIDIEye
       t = 1.0/1000
       @listener = Thread.fork do       
         loop do
-          Thread.exit if @exit_background_requested
+          #Thread.exit if @exit_background_requested
           poll
           trigger_queued_events unless @event_queue.empty?
           sleep(t)

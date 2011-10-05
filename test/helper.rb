@@ -7,8 +7,22 @@ require 'test/unit'
 require 'midi-eye'
 
 module TestHelper
-	
   
+  def self.select_devices
+    $test_device ||= {}
+    { :input => UniMIDI::Input, :output => UniMIDI::Output }.each do |type, klass|
+      $test_device[type] = klass.gets
+    end
+  end
+  
+  def close_all(input, output, listener)
+    listener.close
+    input.clear_buffer
+    input.close
+    output.close
+    sleep(0.1)
+  end
+     
 end
 
-require File.dirname(__FILE__) + '/config'
+TestHelper.select_devices

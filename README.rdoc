@@ -20,8 +20,8 @@ The following is an example that takes any note messages received from a unimidi
   
 First, initialize the MIDI IO ports
   
-  @input = UniMIDI::Input.first.open
-  @output = UniMIDI::Output.first.open
+  @input = UniMIDI::Input.gets
+  @output = UniMIDI::Output.gets
   
 Then create a listener for the input port
  
@@ -61,10 +61,6 @@ A listener can also be run in a background thread by passing in :background => t
 
 * {examples}[http://github.com/arirusso/midi-eye/tree/master/examples]
 * {rdoc}[http://rdoc.info/gems/midi-eye]
-
-== Also see
-
-{topaz}[http://github.com/arirusso/topaz] is an implementation of midi-eye that deals with MIDI tempo
     
 == Author
 

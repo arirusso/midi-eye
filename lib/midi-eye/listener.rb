@@ -17,8 +17,7 @@ module MIDIEye
       @sources = []
       @event_queue = []
       @events = []
-            
-      #@exit_background_requested = false      
+  
       @sources += [input].flatten.map do |i|
         klass = self.class.input_types.find { |type| type.is_compatible?(i) }
         raise "Input class type #{i.class.name} not compatible" if klass.nil?
@@ -91,7 +90,6 @@ module MIDIEye
       @listener = Thread.fork do       
         Thread.abort_on_exception = true
         loop do
-          #Thread.exit if @exit_background_requested
           poll
           trigger_queued_events unless @event_queue.empty?
           sleep(t)
@@ -113,9 +111,12 @@ module MIDIEye
     
     # trigger an event
     def trigger_event(event)
-      action = event[:action]
-      if meets_conditions?(action[:conditions], event[:message][:message]) || action[:conditions].nil?
-        action[:proc].call(event[:message])
+      begin
+        action = event[:action]
+        if meets_conditions?(action[:conditions], event[:message][:message]) || action[:conditions].nil?
+          action[:proc].call(event[:message])
+        end
+      rescue
       end
     end
     

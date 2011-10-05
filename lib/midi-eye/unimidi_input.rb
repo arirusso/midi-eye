@@ -19,8 +19,8 @@ module MIDIEye
       msgs = @device.buffer.slice(@pointer, @device.buffer.length - @pointer)
       @pointer = @device.buffer.length
       msgs.each do |raw_msg| 
-        unless raw_msg.nil?        
-          objs = [@parser.parse(raw_msg[:data], :timestamp => raw_msg[:timestamp])].flatten.compact
+        unless raw_msg.nil?      
+          objs = [@parser.parse(raw_msg[:data], :timestamp => raw_msg[:timestamp])].flatten.compact rescue []
           yield(objs)
         end
       end    

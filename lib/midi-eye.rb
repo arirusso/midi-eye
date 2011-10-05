@@ -15,6 +15,6 @@ require 'midi-eye/unimidi_input'
 
 module MIDIEye
   
-  VERSION = "0.1.3"
+  VERSION = "0.1.4"
   
 end

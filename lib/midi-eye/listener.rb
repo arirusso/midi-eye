@@ -21,13 +21,18 @@ module MIDIEye
       add_input(input)
     end
     
+    # does this listener use <em>input</em>?
+    def uses_input?(input)
+      !@sources.find_all { |source| source.uses?(input) }.empty?
+    end
+    
     # add a source
     # takes a raw input or array of
     def add_input(input)
       @sources += [input].flatten.map do |i|
         klass = self.class.input_types.find { |type| type.is_compatible?(i) }
         raise "Input class type #{i.class.name} not compatible" if klass.nil?
-        klass.new(i)
+        klass.new(i) unless uses_input?(i)
       end
     end
     

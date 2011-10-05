@@ -66,6 +66,14 @@ class ListenerTest < Test::Unit::TestCase
     listener.join 
   end
   
+  def test_uses_input
+    sleep(0.2)
+    output = $test_device[:output]
+    input = $test_device[:input]
+    listener = Listener.new(input)
+    assert_equal(true, listener.uses_input?(input))    
+  end
+  
   def test_remove_input
     sleep(0.2)
     output = $test_device[:output]

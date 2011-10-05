@@ -7,8 +7,8 @@ require 'midi-eye'
 # and sends them to an output transposed up one octave
 
 # first, initialize the MIDI io ports  
-@input = UniMIDI::Input.first.open
-@output = UniMIDI::Output.first.open
+@input = UniMIDI::Input.gets
+@output = UniMIDI::Output.gets
 
 # then create a listener for the input port  
 transpose = MIDIEye::Listener.new(@input)
@@ -33,7 +33,7 @@ transpose.listen_for(:class => [MIDIMessage::NoteOn, MIDIMessage::NoteOff]) do |
   event[:message].note += 12
     
   # send the altered note message to the output you chose earlier 
-  @output.puts(event[:message].to_bytes)
+  @output.puts(event[:message]=)
   
 end
 

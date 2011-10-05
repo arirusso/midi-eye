@@ -11,8 +11,8 @@ include MIDIMessage
 #
 
 # first, initialize the MIDI io ports
-@input = UniMIDI::Input.first.open
-@output = UniMIDI::Output.first.open
+@input = UniMIDI::Input.gets
+@output = UniMIDI::Output.gets
 
 # initialize the listener and give it the input port
 @clock = MIDIEye::Listener.new(@input)
@@ -37,7 +37,7 @@ note_on = true
     # construct the note
     note = type.new(0, @notes[note_counter], 64)
     # output the note   
-    @output.puts(note.to_bytes)
+    @output.puts(note)
     
     note_on=!note_on    
     # step the note counter if we've finished with both note on and off for this 

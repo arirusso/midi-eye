@@ -3,7 +3,8 @@ module MIDIEye
   
   class Listener
     
-    attr_reader :events, :sources
+    attr_reader :events 
+    attr_accessor :sources
       
     @input_types = []
       
@@ -23,6 +24,10 @@ module MIDIEye
         raise "Input class type #{i.class.name} not compatible" if klass.nil?
         klass.new(i)
       end
+    end
+    
+    def delete_event(name)
+      @events.delete_if { |e| e[:listener_name] == name }
     end
     
     # start the listener. pass in :background => true to run only in a background thread. returns self
@@ -54,9 +59,9 @@ module MIDIEye
     # add an event to listen for. returns self
     def listen_for(options = {}, &proc)
       raise 'listener must have a block' if proc.nil?
-      name = options[:name]
-      options.delete(:name)
-      @events << { :conditions => options, :proc => proc, :name => name }
+      name = options[:listener_name]
+      options.delete(:listener_name)
+      @events << { :conditions => options, :proc => proc, :listener_name => name }
       self      
     end
     alias_method :on_message, :listen_for

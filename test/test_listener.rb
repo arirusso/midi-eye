@@ -8,6 +8,33 @@ class ListenerTest < Test::Unit::TestCase
   include MIDIMessage
   include TestHelper
   
+  def test_delete_event
+    sleep(0.2)
+    output = $test_device[:output]
+    input = $test_device[:input]
+    listener = Listener.new(input)
+    listener.listen_for(:listener_name => :test) do |event|
+      assert_equal(1, listener.events.size)
+      listener.delete_event(:test)
+      assert_equal(0, listener.events.size)
+      close_all(input, output, listener)
+    end
+    listener.start(:background => true)
+    sleep(0.5)
+    output.puts(0x90, 0x70, 0x20)
+    listener.join 
+  end
+  
+  def test_delete_source
+    sleep(0.2)
+    output = $test_device[:output]
+    input = $test_device[:input]
+    listener = Listener.new(input)
+    assert_equal(1, listener.sources.size)
+    listener.sources.clear
+    assert_equal(0, listener.sources.size)  
+  end
+  
   def test_recognize_input_class
     sleep(0.2)
     input = $test_device[:input]

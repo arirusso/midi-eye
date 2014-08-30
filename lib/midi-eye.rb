@@ -13,7 +13,7 @@ require 'unimidi'
 
 # classes
 require 'midi-eye/listener'
-require 'midi-eye/unimidi_input'
+require 'midi-eye/source'
 
 module MIDIEye
   

@@ -1,17 +1,18 @@
 module MIDIEye
   
-  # This class deals with retrieving new messages from a unimidi input buffer
-  class UniMIDIInput
+  # Retrieves new messages from a unimidi input buffer
+  class Source
     
     attr_reader :device, :pointer
     
+    # @param [UniMIDI::Input] input
     def initialize(input)   
-      @parser = Nibbler.new   
-      @pointer = 0      
-      @device = input      
+      @parser = Nibbler.new
+      @pointer = 0
+      @device = input
     end
     
-    # Grabs new messages from the unimidi buffer
+    # Grabs new messages from the input buffer
     def poll(&block)
       messages = @device.buffer.slice(@pointer, @device.buffer.length - @pointer)
       @pointer = @device.buffer.length
@@ -24,19 +25,20 @@ module MIDIEye
       end    
     end
     
-    # Whether the given input is a UniMIDI input
+    # Whether the given object is a UniMIDI input
+    # @param [Object] input
+    # @return [Boolean]
     def self.compatible?(input)
       input.respond_to?(:gets) && input.respond_to?(:buffer)
     end
     
     # If this source was created from the given input
+    # @param [UniMIDI::Input] input
+    # @return [Boolean]
     def uses?(input)
       @device == input
     end
-    
-    # Add this class to the Listener class' known input types
-    Listener.input_types << self 
-    
+        
   end
             
 end

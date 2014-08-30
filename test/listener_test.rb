@@ -96,7 +96,7 @@ class ListenerTest < Test::Unit::TestCase
     input = $test_device[:input]
     output = $test_device[:output]
     listener = Listener.new(input)
-    assert_equal(UniMIDIInput, listener.sources.first.class)
+    assert_equal(Source, listener.sources.first.class)
     close_all(input, output, listener)
   end
   

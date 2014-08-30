@@ -4,46 +4,39 @@ module MIDIEye
     
     attr_reader :events 
     attr_accessor :sources
-      
-    @input_types = []
-      
-    class << self
-      # A registry of input types
-      attr_reader :input_types      
-    end
         
-    def initialize(input)
+    # @param [Array<UniMIDI::Input>, UniMIDI::Input] inputs Input(s) to add to the list of sources for this listener
+    def initialize(inputs)
       @sources = []
       @event_queue = []
       @events = []
   
-      add_input(input)
+      add_input(inputs)
     end
     
     # Does this listener use the given input?
+    # @param [UniMIDI::Input] input
     # @return [Boolean]
     def uses_input?(input)
       @sources.any? { |source| source.uses?(input) }
     end
     
     # Add a MIDI source
-    # takes a raw input or array of
     # @param [Array<UniMIDI::Input>, UniMIDI::Input] inputs Input(s) to add to the list of sources for this listener
-    # @return [Array<MIDIEye::UniMIDIInput>] The updated list of sources for this listener
+    # @return [Array<MIDIEye::Source>] The updated list of sources for this listener
     def add_input(inputs)
       inputs = [inputs].flatten.compact
-      new_sources = inputs.map do |i|
-        klass = self.class.input_types.find { |type| type.compatible?(i) }
-        raise "Input class type #{i.class.name} not compatible" if klass.nil?
-        klass.new(i) unless uses_input?(i)
+      new_sources = inputs.map do |input|
+        Source.new(input) unless uses_input?(input)
       end
       @sources += new_sources.compact
       @sources
     end
+    alias_method :add_inputs, :add_input
     
     # Remove a MIDI source
     # @param [Array<UniMIDI::Input>, UniMIDI::Input] inputs Input(s) to remove from the list of sources for this listener
-    # @return [Array<MIDIEye::UniMIDIInput>] The updated list of sources for this listener
+    # @return [Array<MIDIEye::Source>] The updated list of sources for this listener
     def remove_input(inputs)
       inputs = [inputs].flatten.compact
       inputs.each do |input|
@@ -51,7 +44,9 @@ module MIDIEye
       end
       @sources
     end
-    
+    alias_method :remove_inputs, :remove_input
+   
+    # @param [Symbol] name
     def delete_event(name)
       @events.delete_if { |event| event[:listener_name] == name }
     end
@@ -86,6 +81,7 @@ module MIDIEye
     end
     
     # Add an event to listen for
+    # @param [Hash] options
     # @return [MIDIEye::Listener] self
     def listen_for(options = {}, &callback)
       raise "Listener must have a block" if callback.nil?

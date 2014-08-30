@@ -27,14 +27,14 @@ transpose = MIDIEye::Listener.new(@input)
 #
 transpose.listen_for(:class => [MIDIMessage::NoteOn, MIDIMessage::NoteOff]) do |event|
 
-  p "from #{event[:message].note} to #{(event[:message].note + 12)}"
+  puts "Transposing from #{event[:message].note} to #{(event[:message].note + 12)}"
      
   # raise the note value by an octave
   event[:message].note += 12
     
   # send the altered note message to the output you chose earlier 
-  @output.puts(event[:message]=)
-  
+  @output.puts(event[:message])
+
 end
 
 # now start the listener

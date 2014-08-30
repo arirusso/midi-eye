@@ -38,6 +38,7 @@ note_on = true
     note = type.new(0, @notes[note_counter], 64)
     # output the note   
     @output.puts(note)
+    puts(@notes[note_counter]) if note_on # display the note value
     
     note_on=!note_on    
     # step the note counter if we've finished with both note on and off for this 

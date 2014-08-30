@@ -57,7 +57,7 @@ module MIDIEye
     # @return [MIDIEye::Listener] self
     def run(options = {})      
       listen
-      @listener.join unless !!options[:background]
+      join unless !!options[:background]
       self
     end
     alias_method :start, :run
@@ -76,7 +76,12 @@ module MIDIEye
     # Join the listener if it's being run in the background.
     # @return [MIDIEye::Listener] self
     def join
-      @listener.join
+      begin
+        @listener.join
+      rescue SystemExit, Interrupt
+        @listener.kill
+        raise
+      end
       self
     end
     
@@ -98,7 +103,7 @@ module MIDIEye
     alias_method :on_message, :listen_for
     alias_method :listen, :listen_for
     
-    # Poll the input source for new input. this will normally be done by the background thread 
+    # Poll the input source for new input. This will normally be done by the background thread 
     def poll
       @sources.each do |input|
         input.poll do |objs|
@@ -128,7 +133,7 @@ module MIDIEye
     end
     
     # Start the background listener thread    
-    def listen   
+    def listen
       @listener = Thread.new { listen_loop }       
       @listener.abort_on_exception = true
       true

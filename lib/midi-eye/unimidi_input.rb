@@ -1,9 +1,6 @@
-#!/usr/bin/env ruby
-#
 module MIDIEye
   
-  # this class deals with retrieving new messages from
-  # a unimidi input buffer
+  # This class deals with retrieving new messages from a unimidi input buffer
   class UniMIDIInput
     
     attr_reader :device, :pointer
@@ -14,29 +11,30 @@ module MIDIEye
       @device = input      
     end
     
-    # this grabs new messages from the unimidi buffer
+    # Grabs new messages from the unimidi buffer
     def poll(&block)
-      msgs = @device.buffer.slice(@pointer, @device.buffer.length - @pointer)
+      messages = @device.buffer.slice(@pointer, @device.buffer.length - @pointer)
       @pointer = @device.buffer.length
-      msgs.each do |raw_msg| 
-        unless raw_msg.nil?      
-          objs = [@parser.parse(raw_msg[:data], :timestamp => raw_msg[:timestamp])].flatten.compact rescue []
-          yield(objs)
+      messages.each do |raw_message| 
+        unless raw_message.nil?
+          parsed_messages = @parser.parse(raw_message[:data], :timestamp => raw_message[:timestamp]) rescue nil
+          objects = [parsed_messages].flatten.compact
+          yield(objects)
         end
       end    
     end
     
-    # if <em>input</em> looks like a unimidi input, this returns true
-    def self.is_compatible?(input)
+    # Whether the given input is a UniMIDI input
+    def self.compatible?(input)
       input.respond_to?(:gets) && input.respond_to?(:buffer)
     end
     
-    # if this source was created from <em>input</em>
+    # If this source was created from the given input
     def uses?(input)
       @device == input
     end
     
-    # add this class to the Listener class' known input types
+    # Add this class to the Listener class' known input types
     Listener.input_types << self 
     
   end

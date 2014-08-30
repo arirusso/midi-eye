@@ -1,4 +1,3 @@
-#!/usr/bin/env ruby
 module MIDIEye
   
   class Listener
@@ -9,7 +8,7 @@ module MIDIEye
     @input_types = []
       
     class << self
-      # a registry of input types
+      # A registry of input types
       attr_reader :input_types      
     end
         
@@ -21,45 +20,55 @@ module MIDIEye
       add_input(input)
     end
     
-    # does this listener use <em>input</em>?
+    # Does this listener use the given input?
+    # @return [Boolean]
     def uses_input?(input)
-      !@sources.find_all { |source| source.uses?(input) }.empty?
+      @sources.any? { |source| source.uses?(input) }
     end
     
-    # add a source
+    # Add a MIDI source
     # takes a raw input or array of
-    def add_input(input)
-      @sources += [input].flatten.map do |i|
-        klass = self.class.input_types.find { |type| type.is_compatible?(i) }
+    # @param [Array<UniMIDI::Input>, UniMIDI::Input] inputs Input(s) to add to the list of sources for this listener
+    # @return [Array<MIDIEye::UniMIDIInput>] The updated list of sources for this listener
+    def add_input(inputs)
+      inputs = [inputs].flatten.compact
+      new_sources = inputs.map do |i|
+        klass = self.class.input_types.find { |type| type.compatible?(i) }
         raise "Input class type #{i.class.name} not compatible" if klass.nil?
         klass.new(i) unless uses_input?(i)
-      end.compact
+      end
+      @sources += new_sources.compact
+      @sources
     end
     
-    # remove a source
-    # takes a raw input or array of
+    # Remove a MIDI source
+    # @param [Array<UniMIDI::Input>, UniMIDI::Input] inputs Input(s) to remove from the list of sources for this listener
+    # @return [Array<MIDIEye::UniMIDIInput>] The updated list of sources for this listener
     def remove_input(inputs)
-      to_remove = [inputs].flatten
-      to_remove.each do |input|
+      inputs = [inputs].flatten.compact
+      inputs.each do |input|
         @sources.delete_if { |source| source.uses?(input) }
       end
+      @sources
     end
     
     def delete_event(name)
-      @events.delete_if { |e| e[:listener_name] == name }
+      @events.delete_if { |event| event[:listener_name] == name }
     end
     
-    # start the listener. pass in :background => true to run only in a background thread. returns self
+    # Start listening for MIDI messages
+    # @params [Hash] options
+    # @option options [Boolean] :background Run in a background thread
+    # @return [MIDIEye::Listener] self
     def run(options = {})      
-      listen!
-      unless options[:background]
-        @listener.join  
-      end
+      listen
+      @listener.join unless !!options[:background]
       self
     end
     alias_method :start, :run
     
-    # stop the listener. returns self
+    # Stop listening for MIDI messages.
+    # @return [MIDIEye::Listener] self
     def close
       @listener.kill unless @listener.nil?
       @events.clear
@@ -69,31 +78,39 @@ module MIDIEye
     end
     alias_method :stop, :close
     
-    # join the listener if it's being run in the background. returns self
+    # Join the listener if it's being run in the background.
+    # @return [MIDIEye::Listener] self
     def join
       @listener.join
       self
     end
     
-    # add an event to listen for. returns self
-    def listen_for(options = {}, &proc)
-      raise 'listener must have a block' if proc.nil?
+    # Add an event to listen for
+    # @return [MIDIEye::Listener] self
+    def listen_for(options = {}, &callback)
+      raise "Listener must have a block" if callback.nil?
       name = options[:listener_name]
       options.delete(:listener_name)
-      @events << { :conditions => options, :proc => proc, :listener_name => name }
+      event = { 
+        :conditions => options, 
+        :proc => callback, 
+        :listener_name => name 
+      }
+      @events << event
       self      
     end
     alias_method :on_message, :listen_for
     alias_method :listen, :listen_for
     
-    # poll the input source for new input. this will normally be done by the background thread 
+    # Poll the input source for new input. this will normally be done by the background thread 
     def poll
       @sources.each do |input|
         input.poll do |objs|
           objs.each do |batch|
-            [batch[:messages]].flatten.each do |single_message|
-              unless single_message.nil?
-                data = { :message => single_message, :timestamp => batch[:timestamp] }
+            messages = [batch[:messages]].flatten.compact
+            messages.each do |message|
+              unless message.nil?
+                data = { :message => message, :timestamp => batch[:timestamp] }
                 @events.each { |name| queue_event(name, data) }
               end
             end 
@@ -103,46 +120,65 @@ module MIDIEye
     end
 
     private
-    
-    # start the background listener thread    
-    def listen!   
-      t = 1.0/1000
-      @listener = Thread.fork do       
-        Thread.abort_on_exception = true
-        loop do
-          poll
-          trigger_queued_events unless @event_queue.empty?
-          sleep(t)
-        end
+
+    # A loop that runs while the listener is active
+    def listen_loop
+      interval = 1.0/1000
+      loop do
+        poll
+        trigger_queued_events unless @event_queue.empty?
+        sleep(interval)
       end
     end
     
-    # trigger all queued events
+    # Start the background listener thread    
+    def listen   
+      @listener = Thread.new { listen_loop }       
+      @listener.abort_on_exception = true
+      true
+    end
+    
+    # Trigger all queued events
     def trigger_queued_events
       @event_queue.length.times { trigger_event(@event_queue.shift) }
     end
     
-    # does <em>message</em> meet <em>conditions</em>?
+    # Does the given message meet the given conditions?
     def meets_conditions?(conditions, message)
-      !conditions.map do |key, value|
-        message.respond_to?(key) && (value.kind_of?(Array) ? value.include?(message.send(key)) : value.eql?(message.send(key))) 
-      end.include?(false)
+      results = conditions.map do |key, value|
+        if message.respond_to?(key)
+          if value.kind_of?(Array)
+            value.include?(message.send(key))
+          else
+            value.eql?(message.send(key))
+          end
+        else
+          false
+        end
+      end
+      results.all?
     end
     
-    # trigger an event
+    # Trigger an event
     def trigger_event(event)
-      begin
-        action = event[:action]
-        if meets_conditions?(action[:conditions], event[:message][:message]) || action[:conditions].nil?
+      action = event[:action]
+      conditions = action[:conditions]
+      if conditions.nil? || meets_conditions?(conditions, event[:message][:message])
+        begin
           action[:proc].call(event[:message])
+        rescue
+          # help
         end
-      rescue
       end
     end
     
-    # add an event to the trigger queue 
-    def queue_event(event, message)  
-      @event_queue << { :action => event, :message => message }
+    # Add an event to the trigger queue 
+    def queue_event(action, message)  
+      event = { 
+        :action => action, 
+        :message => message 
+      }
+      @event_queue << event
     end
                 
   end  

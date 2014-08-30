@@ -12,7 +12,7 @@ module MIDIEye
       attr_reader :input_types      
     end
         
-    def initialize(input, options = {})
+    def initialize(input)
       @sources = []
       @event_queue = []
       @events = []

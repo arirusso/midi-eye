@@ -21,8 +21,8 @@ The following is an example that takes any note messages received from a unimidi
 First, pick some MIDI IO ports
 
 ```ruby 
-  @input = UniMIDI::Input.gets
-  @output = UniMIDI::Output.gets
+@input = UniMIDI::Input.gets
+@output = UniMIDI::Output.gets
 ```
 
 Then create a listener for the input port
@@ -35,9 +35,7 @@ You can bind an event to the listener using `Listener#listen_for`
 
 The listener will try to positively match the parameters you pass in to the properties of the messages it receives.
 
-In this example, we will tell the listener to listen for note on/off messages which are easily identifiable by their class
-
-You also have the option of leaving out the parameters altogether and including using conditional if/unless/case/etc statements in your callback
+In this example, we specify that the listener listens for note on/off messages, which are identifiable by their class.
 
 ```ruby
 transpose.listen_for(:class => [MIDIMessage::NoteOn, MIDIMessage::NoteOff]) do |event|
@@ -50,8 +48,10 @@ transpose.listen_for(:class => [MIDIMessage::NoteOn, MIDIMessage::NoteOff]) do |
   
 end
 ```
+
+There is also the option of leaving out the parameters altogether and including using conditional if/unless/case/etc statements in the callback.
   
-You can bind as many events to a listener as you wish, just keep calling `Listener#listen_for`
+You can bind as many events to a listener as you wish by repeatedly calling `Listener#listen_for`
 
 Once all the events are bound, start the listener
 

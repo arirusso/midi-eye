@@ -65,13 +65,19 @@ module MIDIEye
     # Stop listening for MIDI messages.
     # @return [MIDIEye::Listener] self
     def close
-      @listener.kill unless @listener.nil?
+      @listener.kill if running?
       @events.clear
       @sources.clear
       @event_queue.clear
       self
     end
     alias_method :stop, :close
+
+    # Is the listener running?
+    # @return [Boolean]
+    def running?
+      !@listener.nil?
+    end
     
     # Join the listener if it's being run in the background.
     # @return [MIDIEye::Listener] self

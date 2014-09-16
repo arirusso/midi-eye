@@ -1,5 +1,6 @@
 module MIDIEye
   
+  # User defined callbacks for input events
   class Event
 
     def initialize
@@ -13,11 +14,18 @@ module MIDIEye
       @event.delete_if { |event| event[:listener_name].to_s == name.to_s }
     end
 
+    # Clear the collection of events
+    # @return [Boolean]
     def clear
       @event.clear
       @queue.clear
+      true
     end
 
+    # Add a user-defined input callback
+    # @param [Hash] options
+    # @param [Proc] callback
+    # @return [Hash]
     def add(options = {}, &callback)
       name = options[:listener_name]
       options.delete(:listener_name)
@@ -31,6 +39,7 @@ module MIDIEye
     end
 
     # Trigger all enqueued events
+    # @return [Fixnum] The number of triggered events
     def trigger_enqueued
       counter = 0
       while !@queue.empty? do
@@ -40,19 +49,25 @@ module MIDIEye
       counter
     end
 
+    # Enqueue all events with the given message
+    # @return [Array<Hash>]
     def enqueue_all(message)
-      @event.each { |name| enqueue(name, message) }
+      @event.map { |action| enqueue(action, message) }
     end
 
-    # Add an event to the trigger queue 
+    # Add an event to the trigger queue
+    # @return [Hash]
     def enqueue(action, message)  
       event = { 
         :action => action, 
         :message => message 
       }
       @queue << event
+      event
     end
 
+    # The number of events
+    # @return [Fixnum]
     def count
       @event.count
     end

@@ -32,9 +32,12 @@ module MIDIEye
 
     # Trigger all enqueued events
     def trigger_enqueued
+      counter = 0
       while !@queue.empty? do
+        counter += 1
         trigger(@queue.shift)
       end
+      counter
     end
 
     def enqueue_all(message)
@@ -79,8 +82,8 @@ module MIDIEye
       if conditions.nil? || meets_conditions?(conditions, event[:message][:message])
         begin
           action[:proc].call(event[:message])
-        rescue
-          # help
+        rescue Exception => exception
+          Thread.main.raise exception
         end
       end
     end

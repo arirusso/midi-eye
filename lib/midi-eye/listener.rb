@@ -77,9 +77,9 @@ module MIDIEye
     def join
       begin
         @listener.join
-      rescue SystemExit, Interrupt
+      rescue Exception => exception
         @listener.kill
-        raise
+        raise exception
       end
       self
     end
@@ -133,7 +133,7 @@ module MIDIEye
     
     # Start the background listener thread    
     def listen
-      @listener = Thread.new { listen_loop }       
+      @listener = Thread.new { listen_loop }      
       @listener.abort_on_exception = true
       true
     end

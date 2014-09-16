@@ -109,8 +109,10 @@ module MIDIEye
           objs.each do |batch|
             messages = [batch[:messages]].flatten.compact
             messages.each do |message|
-              data = { :message => message, :timestamp => batch[:timestamp] }
-              @event.enqueue_all(data)
+              unless message.nil?
+                data = { :message => message, :timestamp => batch[:timestamp] }
+                @event.enqueue_all(data)
+              end
             end 
           end
         end

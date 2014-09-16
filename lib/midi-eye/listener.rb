@@ -2,14 +2,13 @@ module MIDIEye
   
   class Listener
     
-    attr_reader :events 
+    attr_reader :event 
     attr_accessor :sources
         
     # @param [Array<UniMIDI::Input>, UniMIDI::Input] inputs Input(s) to add to the list of sources for this listener
     def initialize(inputs)
       @sources = []
-      @event_queue = []
-      @events = []
+      @event = Event.new
   
       add_input(inputs)
     end
@@ -45,12 +44,7 @@ module MIDIEye
       @sources
     end
     alias_method :remove_inputs, :remove_input
-   
-    # @param [Symbol] name
-    def delete_event(name)
-      @events.delete_if { |event| event[:listener_name] == name }
-    end
-    
+       
     # Start listening for MIDI messages
     # @params [Hash] options
     # @option options [Boolean] :background Run in a background thread
@@ -66,9 +60,8 @@ module MIDIEye
     # @return [MIDIEye::Listener] self
     def close
       @listener.kill if running?
-      @events.clear
+      @event.clear
       @sources.clear
-      @event_queue.clear
       self
     end
     alias_method :stop, :close
@@ -90,20 +83,20 @@ module MIDIEye
       end
       self
     end
+
+    # Deletes the event with the given name (for backwards compat)
+    # @param [String, Symbol] event_name
+    # @return [Boolean]
+    def delete_event(event_name)
+      !@event.delete(event_name).nil?
+    end 
     
     # Add an event to listen for
     # @param [Hash] options
     # @return [MIDIEye::Listener] self
     def listen_for(options = {}, &callback)
       raise "Listener must have a block" if callback.nil?
-      name = options[:listener_name]
-      options.delete(:listener_name)
-      event = { 
-        :conditions => options, 
-        :proc => callback, 
-        :listener_name => name 
-      }
-      @events << event
+      @event.add(options, &callback)
       self      
     end
     alias_method :on_message, :listen_for
@@ -118,7 +111,7 @@ module MIDIEye
             messages.each do |message|
               unless message.nil?
                 data = { :message => message, :timestamp => batch[:timestamp] }
-                @events.each { |name| queue_event(name, data) }
+                @event.enqueue_all(data)
               end
             end 
           end
@@ -133,7 +126,7 @@ module MIDIEye
       interval = 1.0/1000
       loop do
         poll
-        trigger_queued_events unless @event_queue.empty?
+        @event.trigger_enqueued
         sleep(interval)
       end
     end
@@ -144,50 +137,7 @@ module MIDIEye
       @listener.abort_on_exception = true
       true
     end
-    
-    # Trigger all queued events
-    def trigger_queued_events
-      @event_queue.length.times { trigger_event(@event_queue.shift) }
-    end
-    
-    # Does the given message meet the given conditions?
-    def meets_conditions?(conditions, message)
-      results = conditions.map do |key, value|
-        if message.respond_to?(key)
-          if value.kind_of?(Array)
-            value.include?(message.send(key))
-          else
-            value.eql?(message.send(key))
-          end
-        else
-          false
-        end
-      end
-      results.all?
-    end
-    
-    # Trigger an event
-    def trigger_event(event)
-      action = event[:action]
-      conditions = action[:conditions]
-      if conditions.nil? || meets_conditions?(conditions, event[:message][:message])
-        begin
-          action[:proc].call(event[:message])
-        rescue
-          # help
-        end
-      end
-    end
-    
-    # Add an event to the trigger queue 
-    def queue_event(action, message)  
-      event = { 
-        :action => action, 
-        :message => message 
-      }
-      @event_queue << event
-    end
-                
+                            
   end  
   
 end

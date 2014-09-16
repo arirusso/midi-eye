@@ -53,9 +53,9 @@ class ListenerTest < Test::Unit::TestCase
     input = $test_device[:input]
     listener = Listener.new(input)
     listener.listen_for(:listener_name => :test) do |event|
-      assert_equal(1, listener.events.size)
+      assert_equal(1, listener.event.count)
       listener.delete_event(:test)
-      assert_equal(0, listener.events.size)
+      assert_equal(0, listener.event.count)
       close_all(input, output, listener)
     end
     listener.start(:background => true)

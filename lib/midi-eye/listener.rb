@@ -133,7 +133,13 @@ module MIDIEye
     
     # Start the background listener thread    
     def listen
-      @listener = Thread.new { listen_loop }      
+      @listener = Thread.new do
+        begin
+          listen_loop
+        rescue Exception => exception
+          Thread.main.raise(exception)
+        end
+      end
       @listener.abort_on_exception = true
       true
     end

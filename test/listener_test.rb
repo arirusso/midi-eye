@@ -11,108 +11,117 @@ class ListenerTest < Test::Unit::TestCase
       @listener = MIDIEye::Listener.new(@input)
     end
 
-    context "basic" do
+    context "#listen_for" do
 
-      setup do
-        @i = 0
-        @listener.listen_for do |event|
-          @i += 1
-          assert_equal(1, @i)
-          TestHelper.close_all(@input, @output, @listener)
-        end
-        @listener.start(:background => true)
-        sleep(0.5)
-      end
+      context "no filter" do
 
-      should "receive messages" do
-        @output.puts(0x90, 0x40, 0x10)
-        @listener.join
-      end
-
-    end
-
-    context "rapid control change" do
-
-      setup do
-        @i = 0
-        @listener.listen_for(:class => MIDIMessage::ControlChange) do |event|
-          @i += 1
-          if @i == 5 * 126
+        setup do
+          @i = 0
+          @listener.listen_for do |event|
+            @i += 1
+            assert_equal(1, @i)
             TestHelper.close_all(@input, @output, @listener)
-            assert_equal(5 * 126, @i)
           end
+          @listener.start(:background => true)
+          sleep(0.5)
         end
-        @listener.start(:background => true)
-        sleep(0.5)
+
+        should "receive messages" do
+          @output.puts(0x90, 0x40, 0x10)
+          @listener.join
+        end
+
       end
 
-      should "receive messages" do
-        5.times do
-          126.times do |i|
-            @output.puts(176, 1, i+1)
+      context "filter on control change" do
+
+        context "rapid messages" do
+
+          setup do
+            @i = 0
+            @listener.listen_for(:class => MIDIMessage::ControlChange) do |event|
+              @i += 1
+              if @i == 5 * 126
+                TestHelper.close_all(@input, @output, @listener)
+                assert_equal(5 * 126, @i)
+              end
+            end
+            @listener.start(:background => true)
+            sleep(0.5)
           end
+
+          should "receive messages" do
+            5.times do
+              126.times do |i|
+                @output.puts(176, 1, i+1)
+              end
+            end
+            @listener.join
+          end
+
         end
-        @listener.join
-      end
 
-    end
+        context "normal messages" do
 
-    context "control change" do
+          setup do
+            @listener.listen_for(:class => MIDIMessage::ControlChange) do |event|
+              assert_equal(MIDIMessage::ControlChange, event[:message].class)
+              assert_equal(1, event[:message].index)
+              assert_equal(35, event[:message].value)
+              assert_equal([176, 1, 35], event[:message].to_bytes)
+              TestHelper.close_all(@input, @output, @listener)
+            end
+            @listener.start(:background => true)
+            sleep(0.5)
+          end
 
-      setup do
-        @listener.listen_for(:class => MIDIMessage::ControlChange) do |event|
-          assert_equal(MIDIMessage::ControlChange, event[:message].class)
-          assert_equal(1, event[:message].index)
-          assert_equal(35, event[:message].value)
-          assert_equal([176, 1, 35], event[:message].to_bytes)
-          TestHelper.close_all(@input, @output, @listener)
+          should "receive messages" do
+            @output.puts(176, 1, 35)
+            @listener.join
+          end
+
         end
-        @listener.start(:background => true)
-        sleep(0.5)
+
       end
 
-      should "receive messages" do
-        @output.puts(176, 1, 35)
-        @listener.join
-      end
-    end
+      context "filter on sysex" do
 
-    context "sysex" do
-
-      setup do
-        @listener.listen_for(:class => MIDIMessage::SystemExclusive::Command) do |event|
-          assert_equal(MIDIMessage::SystemExclusive::Command, event[:message].class)
-          assert_equal([0xF0, 0x41, 0x10, 0x42, 0x12, 0x40, 0x00, 0x7F, 0x00, 0x41, 0xF7], event[:message].to_byte_array)
-          TestHelper.close_all(@input, @output, @listener)
+        setup do
+          @listener.listen_for(:class => MIDIMessage::SystemExclusive::Command) do |event|
+            assert_equal(MIDIMessage::SystemExclusive::Command, event[:message].class)
+            assert_equal([0xF0, 0x41, 0x10, 0x42, 0x12, 0x40, 0x00, 0x7F, 0x00, 0x41, 0xF7], event[:message].to_byte_array)
+            TestHelper.close_all(@input, @output, @listener)
+          end
+          @listener.start(:background => true)
+          sleep(0.5)
         end
-        @listener.start(:background => true)
-        sleep(0.5)
-      end
 
-      should "receive messages" do
-        @output.puts(0xF0, 0x41, 0x10, 0x42, 0x12, 0x40, 0x00, 0x7F, 0x00, 0x41, 0xF7)
-        @listener.join
-      end
-
-    end
-
-    context "note on" do
-
-      setup do
-        @listener.listen_for(:class => MIDIMessage::NoteOff) do |event|
-          assert_equal(MIDIMessage::NoteOff, event[:message].class)
-          assert_equal(0x50, event[:message].note)
-          assert_equal(0x40, event[:message].velocity)
-          assert_equal([0x80, 0x50, 0x40], event[:message].to_bytes)
-          TestHelper.close_all(@input, @output, @listener)
+        should "receive messages" do
+          @output.puts(0xF0, 0x41, 0x10, 0x42, 0x12, 0x40, 0x00, 0x7F, 0x00, 0x41, 0xF7)
+          @listener.join
         end
-        @listener.start(:background => true)
-        sleep(0.5)
+
       end
 
-      should "receive messages" do
-        @output.puts(0x80, 0x50, 0x40)
-        @listener.join
+      context "filter on note on" do
+
+        setup do
+          @listener.listen_for(:class => MIDIMessage::NoteOff) do |event|
+            assert_equal(MIDIMessage::NoteOff, event[:message].class)
+            assert_equal(0x50, event[:message].note)
+            assert_equal(0x40, event[:message].velocity)
+            assert_equal([0x80, 0x50, 0x40], event[:message].to_bytes)
+            TestHelper.close_all(@input, @output, @listener)
+          end
+          @listener.start(:background => true)
+          sleep(0.5)
+        end
+
+        should "receive messages" do
+          @output.puts(0x80, 0x50, 0x40)
+          @listener.join
+        end
+
       end
 
     end

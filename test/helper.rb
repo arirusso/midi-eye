@@ -7,14 +7,16 @@ require 'test/unit'
 require 'midi-eye'
 
 module TestHelper
-  
-  def self.select_devices
+
+  extend self
+
+  def select_devices
     $test_device ||= {}
     { :input => UniMIDI::Input, :output => UniMIDI::Output }.each do |type, klass|
       $test_device[type] = klass.gets
     end
   end
-  
+
   def close_all(input, output, listener)
     listener.close
     input.clear_buffer
@@ -22,7 +24,7 @@ module TestHelper
     output.close
     sleep(0.1)
   end
-     
+
 end
 
 TestHelper.select_devices

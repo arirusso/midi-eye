@@ -147,4 +147,24 @@ class ListenerTest < Test::Unit::TestCase
     listener.join
   end
 
+  def test_close
+    sleep(0.2)
+    output = $test_device[:output]
+    input = $test_device[:input]
+    listener = MIDIEye::Listener.new(input)
+    listener.listen_for(:class => MIDIMessage::NoteOff) do |event|
+      assert_equal(MIDIMessage::NoteOff, event[:message].class)
+      assert_equal(0x50, event[:message].note)
+      assert_equal(0x40, event[:message].velocity)
+      assert_equal([0x80, 0x50, 0x40], event[:message].to_bytes)
+      TestHelper.close_all(input, output, listener)
+    end
+    listener.start(:background => true)
+    sleep(0.5)
+    output.puts(0x80, 0x50, 0x40)
+    listener.join
+    assert listener.close
+    refute listener.running?
+  end
+
 end

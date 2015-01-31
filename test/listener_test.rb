@@ -27,7 +27,6 @@ class ListenerTest < Minitest::Test
           @i = 0
           @listener.listen_for do |event|
             @i += 1
-            assert_equal(1, @i)
           end
           @listener.start(:background => true)
           sleep(0.5)
@@ -35,7 +34,8 @@ class ListenerTest < Minitest::Test
 
         should "receive messages" do
           @output.puts(0x90, 0x40, 0x10)
-
+          sleep(0.2)
+          assert_equal 1, @i
         end
 
       end
@@ -48,9 +48,6 @@ class ListenerTest < Minitest::Test
             @i = 0
             @listener.listen_for(:class => MIDIMessage::ControlChange) do |event|
               @i += 1
-              if @i == 5 * 126
-                assert_equal(5 * 126, @i)
-              end
             end
             @listener.start(:background => true)
             sleep(0.5)
@@ -62,6 +59,8 @@ class ListenerTest < Minitest::Test
                 @output.puts(176, 1, i+1)
               end
             end
+            sleep(1)
+            assert_equal(5 * 126, @i)
           end
 
         end
@@ -69,18 +68,23 @@ class ListenerTest < Minitest::Test
         context "normal messages" do
 
           setup do
+            @event = nil
             @listener.listen_for(:class => MIDIMessage::ControlChange) do |event|
-              assert_equal(MIDIMessage::ControlChange, event[:message].class)
-              assert_equal(1, event[:message].index)
-              assert_equal(35, event[:message].value)
-              assert_equal([176, 1, 35], event[:message].to_bytes)
+              @event = event
             end
             @listener.start(:background => true)
             sleep(0.5)
+            @input.clear_buffer
           end
 
           should "receive messages" do
             @output.puts(176, 1, 35)
+            sleep(0.2)
+            refute_nil @event
+            assert_equal(MIDIMessage::ControlChange, @event[:message].class)
+            assert_equal(1, @event[:message].index)
+            assert_equal(35, @event[:message].value)
+            assert_equal([176, 1, 35], @event[:message].to_bytes)
           end
 
         end
@@ -90,9 +94,9 @@ class ListenerTest < Minitest::Test
       context "filter on sysex" do
 
         setup do
+          @event = nil
           @listener.listen_for(:class => MIDIMessage::SystemExclusive::Command) do |event|
-            assert_equal(MIDIMessage::SystemExclusive::Command, event[:message].class)
-            assert_equal([0xF0, 0x41, 0x10, 0x42, 0x12, 0x40, 0x00, 0x7F, 0x00, 0x41, 0xF7], event[:message].to_byte_array)
+            @event = event
           end
           @listener.start(:background => true)
           sleep(0.5)
@@ -100,6 +104,10 @@ class ListenerTest < Minitest::Test
 
         should "receive messages" do
           @output.puts(0xF0, 0x41, 0x10, 0x42, 0x12, 0x40, 0x00, 0x7F, 0x00, 0x41, 0xF7)
+          sleep(0.2)
+          refute_nil @event
+          assert_equal(MIDIMessage::SystemExclusive::Command, @event[:message].class)
+          assert_equal([0xF0, 0x41, 0x10, 0x42, 0x12, 0x40, 0x00, 0x7F, 0x00, 0x41, 0xF7], @event[:message].to_byte_array)
         end
 
       end
@@ -107,11 +115,9 @@ class ListenerTest < Minitest::Test
       context "filter on note on" do
 
         setup do
+          @event = nil
           @listener.listen_for(:class => MIDIMessage::NoteOff) do |event|
-            assert_equal(MIDIMessage::NoteOff, event[:message].class)
-            assert_equal(0x50, event[:message].note)
-            assert_equal(0x40, event[:message].velocity)
-            assert_equal([0x80, 0x50, 0x40], event[:message].to_bytes)
+            @event = event
           end
           @listener.start(:background => true)
           sleep(0.5)
@@ -119,6 +125,12 @@ class ListenerTest < Minitest::Test
 
         should "receive messages" do
           @output.puts(0x80, 0x50, 0x40)
+          sleep(0.2)
+          refute_nil @event
+          assert_equal(MIDIMessage::NoteOff, @event[:message].class)
+          assert_equal(0x50, @event[:message].note)
+          assert_equal(0x40, @event[:message].velocity)
+          assert_equal([0x80, 0x50, 0x40], @event[:message].to_bytes)
         end
 
       end
@@ -128,17 +140,19 @@ class ListenerTest < Minitest::Test
     context "#delete_event" do
 
       setup do
+        @event = nil
         @listener.listen_for(:listener_name => :test) do |event|
-          assert_equal(1, @listener.event.count)
-          @listener.delete_event(:test)
-          assert_equal(0, @listener.event.count)
+          @event = event
         end
+        @output.puts(0x90, 0x70, 0x20)
         @listener.start(:background => true)
         sleep(0.5)
       end
 
-      should "receive messages" do
-        @output.puts(0x90, 0x70, 0x20)
+      should "delete event" do
+        assert_equal(1, @listener.event.count)
+        @listener.delete_event(:test)
+        assert_equal(0, @listener.event.count)
       end
 
     end

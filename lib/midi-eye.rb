@@ -18,6 +18,6 @@ require "midi-eye/source"
 
 module MIDIEye
 
-  VERSION = "0.3.8"
+  VERSION = "0.3.9"
 
 end

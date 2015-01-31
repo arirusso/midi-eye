@@ -79,7 +79,7 @@ module MIDIEye
         @listener.join
       rescue Exception => exception
         @listener.kill
-        raise exception
+        Thread.main.raise(exception)
       end
       self
     end

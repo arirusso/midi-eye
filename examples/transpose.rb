@@ -1,50 +1,51 @@
 #!/usr/bin/env ruby
-$:.unshift File.join( File.dirname( __FILE__ ), '../lib')
+$:.unshift(File.join("..", "lib"))
 
-require 'midi-eye'
-  
-# this is an example that takes any note messages received from a unimidi input
-# and sends them to an output transposed up one octave
+require "midi-eye"
 
-# first, initialize the MIDI io ports  
+# This example takes any note messages received from a UniMIDI input,
+# transposes them up one octave and sends them to an output
+
+# First, initialize the MIDI io ports
 @input = UniMIDI::Input.gets
 @output = UniMIDI::Output.gets
 
-# then create a listener for the input port  
+# Create a listener for the input port
 transpose = MIDIEye::Listener.new(@input)
 
-# bind an event to the listener using Listener#listen_for
+# Bind an event to the listener using Listener#listen_for
 #
-# the listener will try to positively match the parameters you pass in to the properties of
+# The listener will try to positively match the parameters you pass in to the properties of
 # the messages it receives
 #
-# in this example, we will look for note on/off messages
+# This example looks for note on/off messages
 #
-# you also have the option of leaving out the parameters altogether and including a conditional
+# You also have the option of leaving out the parameters altogether and including a conditional
 # in your callback (eg if event[:message].class.eql?(NoteOn) do... etc)
 #
-# you can bind as many events to a listener as you wish
+# There's no limit to how many events can be binded to a listener
 #
 transpose.listen_for(:class => [MIDIMessage::NoteOn, MIDIMessage::NoteOff]) do |event|
 
-  puts "Transposing from #{event[:message].note} to #{(event[:message].note + 12)}"
-     
-  # raise the note value by an octave
-  event[:message].note += 12
-    
-  # send the altered note message to the output you chose earlier 
+  # Raise the note value by an octave
+  new_note = event[:message].note + 12
+  puts "Transposing from note #{event[:message].note} to note #{(new_note)}"
+  event[:message].note = new_note
+
+  # Send the altered note message to the output
   @output.puts(event[:message])
 
 end
 
-# now start the listener
+# Start the listener
 
-p "control-c to quit..."
-  
+p "Control-C to quit..."
+
 transpose.run
-  
-# or have the listener run only in a background thread by using
-# this will allow you to run multiple listeners at the same time for instance, if you're
-# trying to listen on multiple input ports
-  
+
+# You can also have the listener run only in a background thread by using
+#
 # Transpose.run(:background => true)
+#
+# This will allow you to run multiple listeners at the same time for example, if you
+# want to listen on multiple input ports

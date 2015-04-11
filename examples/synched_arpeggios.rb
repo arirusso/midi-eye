@@ -1,49 +1,49 @@
 #!/usr/bin/env ruby
-$:.unshift File.join( File.dirname( __FILE__ ), '../lib')
+$:.unshift(File.join("..", "lib"))
 
 require "midi-eye"
 
 include MIDIMessage
 
 #
-# this is an example that plays arpeggios in sync with
-# MIDI clock ticks that are received on an input
+# This example plays arpeggios in sync with MIDI clock ticks that are received on an input
 #
 
-# first, initialize the MIDI io ports
+# First, initialize the MIDI io ports
 @input = UniMIDI::Input.gets
 @output = UniMIDI::Output.gets
 
-# initialize the listener and give it the input port
+# Initialize the MIDIEye listener and pass it the input port
 @clock = MIDIEye::Listener.new(@input)
 
-# the notes of the arpeggio
+# The notes of the arpeggio
 @notes = [43, 46, 48, 55, 58, 61, 62, 67, 70, 72]
 
-# play a note and step through the arpeggio every time 2 notes are played
+# Play a note and step through the arpeggio every time 2 clicks arrive
 @ticks_per_note = 2
 
 message_counter = 0
 note_counter = 0
-note_on = true
+is_note_on = true
 
-# look for clock messages
+# Listen for clock messages
 @clock.listen_for(:name => "Clock") do |event|
 
-  # is it time to output a note?
+  # Is it time to output a note?
   if message_counter.eql?(@ticks_per_note)
-    # should we send note on or note off?
-    type = note_on ? NoteOn : NoteOff
-    # construct the note
+    # Should it send note on or note off?
+    type = is_note_on ? NoteOn : NoteOff
+    # Construct the note
     note = type.new(0, @notes[note_counter], 64)
-    # output the note
+    # Output the note
     @output.puts(note)
-    puts(@notes[note_counter]) if note_on # display the note value
+    # Print the note value to the console
+    puts(@notes[note_counter]) if is_note_on
 
-    note_on=!note_on
-    # step the note counter if we've finished with both note on and off for this
-    # particular note
-    note_counter = (note_counter < (@notes.length-1) ? note_counter + 1 : 0) if note_on
+    is_note_on = !is_note_on
+    # Once its finished with both note on and off for this particular note,
+    # increment the note counter
+    note_counter = (note_counter < (@notes.length-1) ? note_counter + 1 : 0) if is_note_on
     message_counter = 0
   else
     message_counter += 1
@@ -51,7 +51,7 @@ note_on = true
 
 end
 
-p "control-c to quit..."
+p "Control-C to quit..."
 
-# start the listener
+# Start the listener
 @clock.run

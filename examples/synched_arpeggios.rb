@@ -3,8 +3,6 @@ $:.unshift(File.join("..", "lib"))
 
 require "midi-eye"
 
-include MIDIMessage
-
 #
 # This example plays arpeggios in sync with MIDI clock ticks that are received on an input
 #
@@ -29,18 +27,23 @@ is_note_on = true
 # Listen for clock messages
 @clock.listen_for(:name => "Clock") do |event|
 
-  # Is it time to output a note?
+  # Should it output a note on this click?
   if message_counter.eql?(@ticks_per_note)
+
     # Should it send note on or note off?
-    type = is_note_on ? NoteOn : NoteOff
+    type = is_note_on ? MIDIMessage::NoteOn : MIDIMessage::NoteOff
+
     # Construct the note
     note = type.new(0, @notes[note_counter], 64)
+
     # Output the note
     @output.puts(note)
+
     # Print the note value to the console
     puts(@notes[note_counter]) if is_note_on
 
     is_note_on = !is_note_on
+
     # Once its finished with both note on and off for this particular note,
     # increment the note counter
     note_counter = (note_counter < (@notes.length-1) ? note_counter + 1 : 0) if is_note_on

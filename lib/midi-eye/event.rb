@@ -3,6 +3,10 @@ module MIDIEye
   # User defined callbacks for input events
   class Event
 
+    extend Forwardable
+
+    def_delegators :@event, :count
+
     def initialize
       @event = []
       @queue = []
@@ -64,12 +68,6 @@ module MIDIEye
       }
       @queue << event
       event
-    end
-
-    # The number of events
-    # @return [Fixnum]
-    def count
-      @event.count
     end
 
     private

@@ -7,6 +7,7 @@
 #
 
 # libs
+require "forwardable"
 require "midi-message"
 require "nibbler"
 require "unimidi"

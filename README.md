@@ -80,4 +80,4 @@ transpose.join # join the background thread later
 
 Apache 2.0, See the file LICENSE
 
-Copyright (c) 2011-2015 [Ari Russo](http://arirusso.com)
+Copyright (c) 2011-2017 [Ari Russo](http://arirusso.com)

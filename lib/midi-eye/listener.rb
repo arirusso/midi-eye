@@ -25,10 +25,8 @@ module MIDIEye
     # @return [Array<MIDIEye::Source>] The updated list of sources for this listener
     def add_input(inputs)
       inputs = [inputs].flatten.compact
-      new_sources = inputs.map do |input|
-        Source.new(input) unless uses_input?(input)
-      end
-      @sources += new_sources.compact
+      input_sources = inputs.reject { |input| uses_input?(input) }
+      @sources += input_sources.map { |input| Source.new(input) }
       @sources
     end
     alias_method :add_inputs, :add_input
@@ -100,7 +98,6 @@ module MIDIEye
       self
     end
     alias_method :on_message, :listen_for
-    alias_method :listen, :listen_for
 
     # Poll the input source for new input. This will normally be done by the background thread
     def poll

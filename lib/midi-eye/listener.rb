@@ -2,6 +2,8 @@ module MIDIEye
 
   class Listener
 
+    LISTEN_INTERVAL = 1.0 / 1000
+
     attr_reader :event
     attr_accessor :sources
 
@@ -121,11 +123,10 @@ module MIDIEye
 
     # A loop that runs while the listener is active
     def listen_loop
-      interval = 1.0/1000
       loop do
         poll
         @event.trigger_enqueued
-        sleep(interval)
+        sleep(LISTEN_INTERVAL)
       end
     end
 

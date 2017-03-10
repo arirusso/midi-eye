@@ -1,5 +1,5 @@
 module MIDIEye
-  
+
   # User defined callbacks for input events
   class Event
 
@@ -29,10 +29,10 @@ module MIDIEye
     def add(options = {}, &callback)
       name = options[:listener_name]
       options.delete(:listener_name)
-      event = { 
-        :conditions => options, 
-        :proc => callback, 
-        :listener_name => name 
+      event = {
+        :conditions => options,
+        :proc => callback,
+        :listener_name => name
       }
       @event << event
       event
@@ -57,10 +57,10 @@ module MIDIEye
 
     # Add an event to the trigger queue
     # @return [Hash]
-    def enqueue(action, message)  
-      event = { 
-        :action => action, 
-        :message => message 
+    def enqueue(action, message)
+      event = {
+        :action => action,
+        :message => message
       }
       @queue << event
       event
@@ -98,11 +98,11 @@ module MIDIEye
         begin
           action[:proc].call(event[:message])
         rescue Exception => exception
-          Thread.main.raise exception
+          Thread.main.raise(exception)
         end
       end
     end
-    
+
   end
 
 end

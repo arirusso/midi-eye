@@ -23,12 +23,10 @@ module MIDIEye
     def poll(&block)
       messages = @device.buffer.slice(@pointer, @device.buffer.length - @pointer)
       @pointer = @device.buffer.length
-      messages.each do |raw_message|
-        unless raw_message.nil?
-          parsed_messages = @parser.parse(raw_message[:data], :timestamp => raw_message[:timestamp]) rescue nil
-          objects = [parsed_messages].flatten.compact
-          yield(objects)
-        end
+      messages.compact.each do |raw_message|
+        parsed_messages = @parser.parse(raw_message[:data], :timestamp => raw_message[:timestamp]) rescue nil
+        objects = [parsed_messages].flatten.compact
+        yield(objects)
       end
     end
 

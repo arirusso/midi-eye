@@ -9,7 +9,7 @@ module MIDIEye
 
     def initialize
       @event = []
-      @queue = []
+      @queue = Queue.new
     end
 
     # Delete an event by name

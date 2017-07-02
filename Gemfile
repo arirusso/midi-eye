@@ -7,6 +7,6 @@ group :test do
   gem "shoulda-context", "~> 1.2", ">= 1.2.1"
 end
 
-gem "midi-message", "~> 0.4", ">= 0.4.4"
-gem "midi-nibbler", "~> 0.2", ">= 0.2.2"
-gem "unimidi", "~> 0.4", ">= 0.4.6"
+gem "midi-message", "~> 0.4", ">= 0.4.9"
+gem "midi-nibbler", "~> 0.2", ">= 0.2.4"
+gem "unimidi", "~> 0.4", ">= 0.4.8"

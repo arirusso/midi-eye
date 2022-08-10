@@ -1,8 +1,8 @@
-module MIDIEye
+# frozen_string_literal: true
 
+module MIDIEye
   # User defined callbacks for input events
   class Event
-
     extend Forwardable
 
     def_delegators :@event, :count
@@ -34,9 +34,9 @@ module MIDIEye
       name = options[:listener_name]
       options.delete(:listener_name)
       event = {
-        :conditions => options,
-        :proc => callback,
-        :listener_name => name
+        conditions: options,
+        proc: callback,
+        listener_name: name
       }
       @event << event
       event
@@ -46,9 +46,9 @@ module MIDIEye
     # @return [Fixnum] The number of triggered events
     def trigger_enqueued
       counter = 0
-      while !@queue.empty? do
+      until @queue.empty?
         counter += 1
-        trigger(@queue.shift)
+        trigger_event(@queue.shift)
       end
       counter
     end
@@ -63,8 +63,8 @@ module MIDIEye
     # @return [Hash]
     def enqueue(action, message)
       event = {
-        :action => action,
-        :message => message
+        action: action,
+        message: message
       }
       @queue << event
       event
@@ -74,33 +74,32 @@ module MIDIEye
 
     # Does the given message meet the given conditions?
     def meets_conditions?(conditions, message)
-      results = conditions.map do |key, value|
-        if message.respond_to?(key)
-          if value.kind_of?(Array)
-            value.include?(message.send(key))
-          else
-            value.eql?(message.send(key))
-          end
-        else
-          false
-        end
-      end
-      results.all?
+      conditions.map { |key, value| condition_met?(message, key, value) }.all?
     end
 
     # Trigger an event
-    def trigger(event)
+    def trigger_event(event)
       action = event[:action]
       conditions = action[:conditions]
-      if conditions.nil? || meets_conditions?(conditions, event[:message][:message])
-        begin
-          action[:proc].call(event[:message])
-        rescue Exception => exception
-          Thread.main.raise(exception)
-        end
+      return unless conditions.nil? || meets_conditions?(conditions, event[:message][:message])
+
+      begin
+        action[:proc].call(event[:message])
+      rescue StandardError => e
+        Thread.main.raise(e)
       end
     end
 
+    def condition_met?(message, key, value)
+      if message.respond_to?(key)
+        if value.is_a?(Enumerable)
+          value.include?(message.send(key))
+        else
+          value.eql?(message.send(key))
+        end
+      else
+        false
+      end
+    end
   end
-
 end

@@ -1,0 +1,4 @@
+Metrics/BlockLength:
+  IgnoredMethods: ['describe', 'context']
+Naming/FileName:
+  Enabled: false

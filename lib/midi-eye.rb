@@ -1,3 +1,5 @@
+# frozen_string_literal: true
+
 #
 # midi-eye
 # MIDI input event listener for Ruby
@@ -8,18 +10,16 @@
 #
 
 # libs
-require "forwardable"
-require "midi-message"
-require "nibbler"
-require "unimidi"
+require 'forwardable'
+require 'midi-message'
+require 'nibbler'
+require 'unimidi'
 
 # classes
-require "midi-eye/event"
-require "midi-eye/listener"
-require "midi-eye/source"
+require 'midi-eye/event'
+require 'midi-eye/listener'
+require 'midi-eye/source'
 
 module MIDIEye
-
-  VERSION = "0.3.10"
-
+  VERSION = '0.3.10'
 end

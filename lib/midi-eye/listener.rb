@@ -1,8 +1,9 @@
+# frozen_string_literal: true
+
 module MIDIEye
-
+  # Listens for MIDI Messages
   class Listener
-
-    LISTEN_INTERVAL = 1.0 / 1000
+    LISTEN_INTERVAL = 1.0 / 10_000
 
     attr_reader :event
     attr_accessor :sources
@@ -31,10 +32,11 @@ module MIDIEye
       @sources += input_sources.map { |input| Source.new(input) }
       @sources
     end
-    alias_method :add_inputs, :add_input
+    alias add_inputs add_input
 
     # Remove a MIDI source
-    # @param [Array<UniMIDI::Input>, UniMIDI::Input] inputs Input(s) to remove from the list of sources for this listener
+    # @param [Array<UniMIDI::Input>, UniMIDI::Input] inputs Input(s) to remove from
+    #    the list of sources for this listener
     # @return [Array<MIDIEye::Source>] The updated list of sources for this listener
     def remove_input(inputs)
       inputs = [inputs].flatten.compact
@@ -43,7 +45,7 @@ module MIDIEye
       end
       @sources
     end
-    alias_method :remove_inputs, :remove_input
+    alias remove_inputs remove_input
 
     # Start listening for MIDI messages
     # @params [Hash] options
@@ -51,10 +53,10 @@ module MIDIEye
     # @return [MIDIEye::Listener] self
     def run(options = {})
       listen
-      join unless !!options[:background]
+      join if options[:background].nil?
       self
     end
-    alias_method :start, :run
+    alias start run
 
     # Stop listening for MIDI messages.
     # @return [MIDIEye::Listener] self
@@ -64,7 +66,7 @@ module MIDIEye
       @sources.clear
       self
     end
-    alias_method :stop, :close
+    alias stop close
 
     # Is the listener running?
     # @return [Boolean]
@@ -77,9 +79,9 @@ module MIDIEye
     def join
       begin
         @listener.join
-      rescue Exception => exception
+      rescue StandardError => e
         @listener.kill
-        Thread.main.raise(exception)
+        Thread.main.raise(e)
       end
       self
     end
@@ -95,31 +97,34 @@ module MIDIEye
     # @param [Hash] options
     # @return [MIDIEye::Listener] self
     def listen_for(options = {}, &callback)
-      raise "Listener must have a block" if callback.nil?
+      raise 'Listener must have a block' if callback.nil?
+
       @event.add(options, &callback)
       self
     end
-    alias_method :on_message, :listen_for
+    alias on_message listen_for
 
     # Poll the input source for new input. This will normally be done by the background thread
     def poll
       @sources.each do |input|
         input.poll do |objs|
-          objs.each do |batch|
-            messages = [batch[:messages]].flatten.compact
-            messages.each do |message|
-              data = {
-                :message => message,
-                :timestamp => batch[:timestamp]
-              }
-              @event.enqueue_all(data)
-            end
-          end
+          objs.each { |batch| input_to_messages(batch) }
         end
       end
     end
 
     private
+
+    def input_to_messages(batch)
+      messages = [batch[:messages]].flatten.compact
+      messages.each do |message|
+        data = {
+          message: message,
+          timestamp: batch[:timestamp]
+        }
+        @event.enqueue_all(data)
+      end
+    end
 
     # A loop that runs while the listener is active
     def listen_loop
@@ -135,14 +140,12 @@ module MIDIEye
       @listener = Thread.new do
         begin
           listen_loop
-        rescue Exception => exception
-          Thread.main.raise(exception)
+        rescue StandardError => e
+          Thread.main.raise(e)
         end
       end
       @listener.abort_on_exception = true
       true
     end
-
   end
-
 end

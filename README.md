@@ -38,7 +38,7 @@ The listener will try to positively match the parameters you pass in to the prop
 In this example, we specify that the listener listens for note on/off messages, which are identifiable by their class.
 
 ```ruby
-transpose.listen_for(:class => [MIDIMessage::NoteOn, MIDIMessage::NoteOff]) do |event|
+transpose.listen_for(class: [MIDIMessage::NoteOn, MIDIMessage::NoteOff]) do |event|
 
   # raise the note value by an octave
   event[:message].note += 12
@@ -59,10 +59,10 @@ Once all the events are bound, start the listener
 transpose.run
 ```
 
-A listener can also be run in a background thread by passing in `:background => true`.
+A listener can also be run in a background thread by passing in `background: true`.
 
 ```ruby
-transpose.run(:background => true)
+transpose.run(background: true)
 
 transpose.join # join the background thread later
 ```

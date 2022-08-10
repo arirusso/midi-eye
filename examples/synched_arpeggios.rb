@@ -1,7 +1,9 @@
 #!/usr/bin/env ruby
-$:.unshift(File.join("..", "lib"))
+# frozen_string_literal: true
 
-require "midi-eye"
+$LOAD_PATH.unshift(File.join('..', 'lib'))
+
+require 'midi-eye'
 
 #
 # This example plays arpeggios in sync with MIDI clock ticks that are received on an input
@@ -25,8 +27,7 @@ note_counter = 0
 is_note_on = true
 
 # Listen for clock messages
-@clock.listen_for(:name => "Clock") do |event|
-
+@clock.listen_for(name: 'Clock') do |_event|
   # Should it output a note on this click?
   if message_counter.eql?(@ticks_per_note)
 
@@ -46,15 +47,14 @@ is_note_on = true
 
     # Once its finished with both note on and off for this particular note,
     # increment the note counter
-    note_counter = (note_counter < (@notes.length-1) ? note_counter + 1 : 0) if is_note_on
+    note_counter = (note_counter < (@notes.length - 1) ? note_counter + 1 : 0) if is_note_on
     message_counter = 0
   else
     message_counter += 1
   end
-
 end
 
-p "Control-C to quit..."
+p 'Control-C to quit...'
 
 # Start the listener
 @clock.run

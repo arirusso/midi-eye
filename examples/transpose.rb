@@ -1,7 +1,9 @@
 #!/usr/bin/env ruby
-$:.unshift(File.join("..", "lib"))
+# frozen_string_literal: true
 
-require "midi-eye"
+$LOAD_PATH.unshift(File.join('..', 'lib'))
+
+require 'midi-eye'
 
 # This example takes any note messages received from a UniMIDI input,
 # transposes them up one octave and sends them to an output
@@ -25,21 +27,19 @@ transpose = MIDIEye::Listener.new(@input)
 #
 # There's no limit to how many events can be binded to a listener
 #
-transpose.listen_for(:class => [MIDIMessage::NoteOn, MIDIMessage::NoteOff]) do |event|
-
+transpose.listen_for(class: [MIDIMessage::NoteOn, MIDIMessage::NoteOff]) do |event|
   # Raise the note value by an octave
   new_note = event[:message].note + 12
-  puts "Transposing from note #{event[:message].note} to note #{(new_note)}"
+  puts "Transposing from note #{event[:message].note} to note #{new_note}"
   event[:message].note = new_note
 
   # Send the altered note message to the output
   @output.puts(event[:message])
-
 end
 
 # Start the listener
 
-p "Control-C to quit..."
+p 'Control-C to quit...'
 
 transpose.run
 

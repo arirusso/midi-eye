@@ -1,8 +1,8 @@
-module MIDIEye
+# frozen_string_literal: true
 
+module MIDIEye
   # Retrieves new messages from a unimidi input buffer
   class Source
-
     attr_reader :device, :pointer
 
     # Whether the given object is a UniMIDI input
@@ -23,15 +23,7 @@ module MIDIEye
     def poll(&block)
       messages = @device.buffer.slice(@pointer, @device.buffer.length - @pointer)
       @pointer = @device.buffer.length
-      messages.compact.each do |raw_message|
-        parsed_messages = begin
-          @parser.parse(raw_message[:data], :timestamp => raw_message[:timestamp])
-        rescue
-          nil
-        end
-        objects = [parsed_messages].flatten.compact
-        yield(objects)
-      end
+      messages.compact.each { |raw_message| handle_message(raw_message, &block) }
     end
 
     # If this source was created from the given input
@@ -41,6 +33,16 @@ module MIDIEye
       @device == input
     end
 
-  end
+    private
 
+    def handle_message(raw_message)
+      parsed_messages = begin
+        @parser.parse(raw_message[:data], timestamp: raw_message[:timestamp])
+      rescue StandardError
+        nil
+      end
+      objects = [parsed_messages].flatten.compact
+      yield(objects)
+    end
+  end
 end

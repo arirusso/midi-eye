@@ -5,13 +5,13 @@ module MIDIEye
   class Listener
     LISTEN_INTERVAL = 1.0 / 10_000
 
-    attr_reader :event
+    attr_reader :event_handlers
     attr_accessor :sources
 
     # @param [Array<UniMIDI::Input>, UniMIDI::Input] inputs Input(s) to add to the list of sources for this listener
     def initialize(inputs)
       @sources = []
-      @event = Event.new
+      @event_handlers = EventHandlers.new
 
       add_input(inputs)
     end
@@ -62,7 +62,7 @@ module MIDIEye
     # @return [MIDIEye::Listener] self
     def close
       @listener.kill if running?
-      @event.clear
+      @event_handlers.clear
       @sources.clear
       self
     end
@@ -90,7 +90,7 @@ module MIDIEye
     # @param [String, Symbol] event_name
     # @return [Boolean]
     def delete_event(event_name)
-      !@event.delete(event_name).nil?
+      !@event_handlers.delete(event_name).nil?
     end
 
     # Add an event to listen for
@@ -99,7 +99,7 @@ module MIDIEye
     def listen_for(options = {}, &callback)
       raise 'Listener must have a block' if callback.nil?
 
-      @event.add(options, &callback)
+      @event_handlers.add(options, &callback)
       self
     end
     alias on_message listen_for
@@ -122,7 +122,7 @@ module MIDIEye
           message: message,
           timestamp: batch[:timestamp]
         }
-        @event.enqueue_all(data)
+        @event_handlers.enqueue_all(data)
       end
     end
 
@@ -130,7 +130,7 @@ module MIDIEye
     def listen_loop
       loop do
         poll
-        @event.trigger_enqueued
+        @event_handlers.handle_enqueued
         sleep(LISTEN_INTERVAL)
       end
     end

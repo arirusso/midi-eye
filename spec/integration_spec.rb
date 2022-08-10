@@ -2,7 +2,7 @@
 
 require 'helper'
 
-describe MIDIEye::Listener do
+describe MIDIEye do
   let(:input) { SpecHelper.devices[:input] }
   let(:output) { SpecHelper.devices[:output] }
   let(:listener) { MIDIEye::Listener.new(input) }
@@ -17,7 +17,7 @@ describe MIDIEye::Listener do
   end
 
   describe '#listen_for' do
-    describe 'no filter' do
+    context 'when there is no filter' do
       it 'receivs messages' do
         i = 0
         listener.listen_for do |_event|
@@ -33,8 +33,8 @@ describe MIDIEye::Listener do
       end
     end
 
-    describe 'filter on control change' do
-      describe 'rapid messages' do
+    context 'when there is a filter on control change' do
+      context 'when there are rapid messages' do
         it 'receives messages' do
           i = 0
           listener.listen_for(class: MIDIMessage::ControlChange) do
@@ -52,7 +52,7 @@ describe MIDIEye::Listener do
         end
       end
 
-      describe 'normal messages' do
+      context 'when there are less rapid messages' do
         it 'receives messages' do
           event = nil
           listener.listen_for(class: MIDIMessage::ControlChange) do |e|
@@ -73,7 +73,7 @@ describe MIDIEye::Listener do
       end
     end
 
-    describe 'filter on sysex' do
+    context 'when there is a filter on sysex' do
       it 'receives messages' do
         event = nil
         listener.listen_for(class: MIDIMessage::SystemExclusive::Command) do |e|
@@ -90,7 +90,7 @@ describe MIDIEye::Listener do
       end
     end
 
-    describe 'filter on note on' do
+    context 'when there is a filter on note on' do
       it 'receives messages' do
         event = nil
         listener.listen_for(class: MIDIMessage::NoteOff) do |e|
@@ -113,16 +113,16 @@ describe MIDIEye::Listener do
   describe '#delete_event' do
     it 'deletes event' do
       event = nil
-      listener.listen_for(listener_name: :test) do |e|
+      listener.listen_for(name: :test) do |e|
         event = e
       end
       output.puts(0x90, 0x70, 0x20)
       listener.start(background: true)
       sleep 0.5
 
-      expect(listener.event.count).to eq(1)
+      expect(listener.event_handlers.count).to eq(1)
       listener.delete_event(:test)
-      expect(listener.event.count).to eq(0)
+      expect(listener.event_handlers.count).to eq(0)
     end
   end
 

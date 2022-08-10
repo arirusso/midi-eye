@@ -2,27 +2,30 @@
 
 module MIDIEye
   # User defined callbacks for input events
-  class Event
+  class EventHandlers
     extend Forwardable
 
-    def_delegators :@event, :count
+    Event = Struct.new(:handler, :message)
+    EventHandler = Struct.new(:conditions, :proc, :name)
+
+    def_delegators :@handlers, :count
 
     def initialize
-      @event = []
-      @queue = Queue.new
+      @handlers = []
+      @event_queue = Queue.new
     end
 
     # Delete an event by name
     # @param [String, Symbol] name
     def delete(name)
-      @event.delete_if { |event| event[:listener_name].to_s == name.to_s }
+      @handlers.delete_if { |handler| handler.name.to_s == name.to_s }
     end
 
-    # Clear the collection of events
+    # Clear the event handlers and their events
     # @return [Boolean]
     def clear
-      @event.clear
-      @queue.clear
+      @handlers.clear
+      @event_queue.clear
       true
     end
 
@@ -31,24 +34,20 @@ module MIDIEye
     # @param [Proc] callback
     # @return [Hash]
     def add(options = {}, &callback)
-      name = options[:listener_name]
-      options.delete(:listener_name)
-      event = {
-        conditions: options,
-        proc: callback,
-        listener_name: name
-      }
-      @event << event
-      event
+      name = options[:name]
+      options.delete(:name)
+      handler = EventHandler.new(options, callback, name)
+      @handlers << handler
+      handler
     end
 
     # Trigger all enqueued events
-    # @return [Fixnum] The number of triggered events
-    def trigger_enqueued
+    # @return [Integer] The number of triggered events
+    def handle_enqueued
       counter = 0
-      until @queue.empty?
+      until @event_queue.empty?
         counter += 1
-        trigger_event(@queue.shift)
+        handle_event(@event_queue.shift)
       end
       counter
     end
@@ -56,17 +55,14 @@ module MIDIEye
     # Enqueue all events with the given message
     # @return [Array<Hash>]
     def enqueue_all(message)
-      @event.map { |action| enqueue(action, message) }
+      @handlers.map { |handler| enqueue(handler, message) }
     end
 
     # Add an event to the trigger queue
     # @return [Hash]
-    def enqueue(action, message)
-      event = {
-        action: action,
-        message: message
-      }
-      @queue << event
+    def enqueue(handler, message)
+      event = Event.new(handler, message)
+      @event_queue << event
       event
     end
 
@@ -78,13 +74,13 @@ module MIDIEye
     end
 
     # Trigger an event
-    def trigger_event(event)
-      action = event[:action]
-      conditions = action[:conditions]
+    def handle_event(event)
+      handler = event.handler
+      conditions = handler.conditions
       return unless conditions.nil? || meets_conditions?(conditions, event[:message][:message])
 
       begin
-        action[:proc].call(event[:message])
+        handler.proc.call(event[:message])
       rescue StandardError => e
         Thread.main.raise(e)
       end

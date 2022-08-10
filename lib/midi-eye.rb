@@ -16,7 +16,7 @@ require 'nibbler'
 require 'unimidi'
 
 # classes
-require 'midi-eye/event'
+require 'midi-eye/event_handlers'
 require 'midi-eye/listener'
 require 'midi-eye/source'
 

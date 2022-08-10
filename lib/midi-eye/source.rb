@@ -14,7 +14,7 @@ module MIDIEye
 
     # @param [UniMIDI::Input] input
     def initialize(input)
-      @parser = Nibbler.new
+      @parser = Nibbler::Session.new
       @pointer = 0
       @device = input
     end
@@ -36,13 +36,13 @@ module MIDIEye
     private
 
     def handle_message(raw_message)
-      parsed_messages = begin
-        @parser.parse(raw_message[:data], timestamp: raw_message[:timestamp])
-      rescue StandardError
-        nil
+      event = begin
+        @parser.parse_events(*raw_message[:data], timestamp: raw_message[:timestamp])
+      # rescue StandardError
+      #   nil
       end
-      objects = [parsed_messages].flatten.compact
-      yield(objects)
+      #p parser_result
+      yield(event)
     end
   end
 end

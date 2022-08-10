@@ -107,20 +107,19 @@ module MIDIEye
     # Poll the input source for new input. This will normally be done by the background thread
     def poll
       @sources.each do |input|
-        input.poll do |objs|
-          objs.each { |batch| input_to_messages(batch) }
+        input.poll do |parser_event|
+          parser_event_to_messages(parser_event)
         end
       end
     end
 
     private
 
-    def input_to_messages(batch)
-      messages = [batch[:messages]].flatten.compact
-      messages.each do |message|
+    def parser_event_to_messages(parser_event)
+      parser_event.report.messages.each do |message|
         data = {
           message: message,
-          timestamp: batch[:timestamp]
+          timestamp: parser_event.timestamp
         }
         @event.enqueue_all(data)
       end

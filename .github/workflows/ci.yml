@@ -1,0 +1,23 @@
+name: CI
+on: [push, pull_request]
+jobs:
+  lint:
+    strategy:
+      matrix:
+        ruby-version:
+          - "2.4"
+    name: ${{ format('Lint (Ruby {0})', matrix.ruby-version) }}
+    runs-on: ubuntu-latest
+    continue-on-error: true
+    steps:
+      - uses: actions/checkout@v1
+
+      - name: Install Ruby
+        uses: ruby/setup-ruby@v1
+        with:
+          ruby-version: ${{ matrix.ruby-version }}
+          bundler-cache: true
+
+      - name: Run Linter
+        run: |
+          bundle exec rubocop

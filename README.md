@@ -62,7 +62,7 @@ transpose.run
 A listener can also be run in a background thread by passing in `:background => true`.
 
 ```ruby
-transpose.run(:background => true)
+transpose.run(background: true)
 
 transpose.join # join the background thread later
 ```

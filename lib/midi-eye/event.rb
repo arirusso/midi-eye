@@ -74,30 +74,31 @@ module MIDIEye
 
     # Does the given message meet the given conditions?
     def meets_conditions?(conditions, message)
-      results = conditions.map do |key, value|
-        if message.respond_to?(key)
-          if value.is_a?(Enumerable)
-            value.include?(message.send(key))
-          else
-            value.eql?(message.send(key))
-          end
-        else
-          false
-        end
-      end
-      results.all?
+      conditions.map { |key, value| condition_met?(message, key, value) }.all?
     end
 
     # Trigger an event
     def trigger_event(event)
       action = event[:action]
       conditions = action[:conditions]
-      if conditions.nil? || meets_conditions?(conditions, event[:message][:message])
-        begin
-          action[:proc].call(event[:message])
-        rescue Exception => e
-          Thread.main.raise(e)
+      return unless conditions.nil? || meets_conditions?(conditions, event[:message][:message])
+
+      begin
+        action[:proc].call(event[:message])
+      rescue StandardError => e
+        Thread.main.raise(e)
+      end
+    end
+
+    def condition_met?(message, key, value)
+      if message.respond_to?(key)
+        if value.is_a?(Enumerable)
+          value.include?(message.send(key))
+        else
+          value.eql?(message.send(key))
         end
+      else
+        false
       end
     end
   end

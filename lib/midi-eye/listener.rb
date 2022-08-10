@@ -1,8 +1,9 @@
 # frozen_string_literal: true
 
 module MIDIEye
+  # Listens for MIDI Messages
   class Listener
-    LISTEN_INTERVAL = 1.0 / 10000
+    LISTEN_INTERVAL = 1.0 / 10_000
 
     attr_reader :event
     attr_accessor :sources
@@ -34,7 +35,8 @@ module MIDIEye
     alias add_inputs add_input
 
     # Remove a MIDI source
-    # @param [Array<UniMIDI::Input>, UniMIDI::Input] inputs Input(s) to remove from the list of sources for this listener
+    # @param [Array<UniMIDI::Input>, UniMIDI::Input] inputs Input(s) to remove from
+    #    the list of sources for this listener
     # @return [Array<MIDIEye::Source>] The updated list of sources for this listener
     def remove_input(inputs)
       inputs = [inputs].flatten.compact
@@ -77,7 +79,7 @@ module MIDIEye
     def join
       begin
         @listener.join
-      rescue Exception => e
+      rescue StandardError => e
         @listener.kill
         Thread.main.raise(e)
       end
@@ -106,21 +108,23 @@ module MIDIEye
     def poll
       @sources.each do |input|
         input.poll do |objs|
-          objs.each do |batch|
-            messages = [batch[:messages]].flatten.compact
-            messages.each do |message|
-              data = {
-                message: message,
-                timestamp: batch[:timestamp]
-              }
-              @event.enqueue_all(data)
-            end
-          end
+          objs.each { |batch| input_to_messages(batch) }
         end
       end
     end
 
     private
+
+    def input_to_messages(batch)
+      messages = [batch[:messages]].flatten.compact
+      messages.each do |message|
+        data = {
+          message: message,
+          timestamp: batch[:timestamp]
+        }
+        @event.enqueue_all(data)
+      end
+    end
 
     # A loop that runs while the listener is active
     def listen_loop
@@ -136,7 +140,7 @@ module MIDIEye
       @listener = Thread.new do
         begin
           listen_loop
-        rescue Exception => e
+        rescue StandardError => e
           Thread.main.raise(e)
         end
       end

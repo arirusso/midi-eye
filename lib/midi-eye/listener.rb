@@ -48,12 +48,11 @@ module MIDIEye
     alias remove_inputs remove_input
 
     # Start listening for MIDI messages
-    # @params [Hash] options
-    # @option options [Boolean] :background Run in a background thread
+    # @params [Boolean] background Run in a background thread (default: true)
     # @return [MIDIEye::Listener] self
-    def run(options = {})
+    def run(background: true)
       listen
-      join if options[:background].nil?
+      join unless background
       self
     end
     alias start run
@@ -86,13 +85,6 @@ module MIDIEye
       self
     end
 
-    # Deletes the event with the given name (for backwards compat)
-    # @param [String, Symbol] event_name
-    # @return [Boolean]
-    def delete_event(event_name)
-      !@event_handlers.delete(event_name).nil?
-    end
-
     # Add an event to listen for
     # @param [Hash] options
     # @return [MIDIEye::Listener] self
@@ -108,12 +100,16 @@ module MIDIEye
     def poll
       @sources.each do |input|
         input.poll do |objs|
-          objs.each { |batch| input_to_messages(batch) }
+          handle_new_input(objs)
         end
       end
     end
 
     private
+
+    def handle_new_input(objs)
+      objs.each { |batch| input_to_messages(batch) }
+    end
 
     def input_to_messages(batch)
       messages = [batch[:messages]].flatten.compact
@@ -122,7 +118,7 @@ module MIDIEye
           message: message,
           timestamp: batch[:timestamp]
         }
-        @event_handlers.enqueue_all(data)
+        @event_handlers.enqueue(data)
       end
     end
 

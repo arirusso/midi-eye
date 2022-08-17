@@ -13,7 +13,6 @@
 require 'forwardable'
 require 'midi-message'
 require 'nibbler'
-require 'unimidi'
 
 # classes
 require 'midi-eye/event_handlers'

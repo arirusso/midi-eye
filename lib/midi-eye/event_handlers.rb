@@ -5,8 +5,8 @@ module MIDIEye
   class EventHandlers
     extend Forwardable
 
-    Event = Struct.new(:handler, :message)
     EventHandler = Struct.new(:conditions, :proc, :name)
+    EnqueuedEvent = Struct.new(:handler, :event)
 
     def_delegators :@handlers, :count
 
@@ -52,21 +52,21 @@ module MIDIEye
       counter
     end
 
-    # Enqueue all events with the given message
+    # Enqueue the given event for all handlers
     # @return [Array<Hash>]
-    def enqueue_all(message)
-      @handlers.map { |handler| enqueue(handler, message) }
-    end
-
-    # Add an event to the trigger queue
-    # @return [Hash]
-    def enqueue(handler, message)
-      event = Event.new(handler, message)
-      @event_queue << event
-      event
+    def enqueue(event)
+      @handlers.map { |handler| enqueue_event_for_handler(handler, event) }
     end
 
     private
+
+    # For the given handler, add an event to the queue
+    # @return [Hash]
+    def enqueue_event_for_handler(handler, event)
+      enqueued_event = EnqueuedEvent.new(handler, event)
+      @event_queue << enqueued_event
+      enqueued_event
+    end
 
     # Does the given message meet the given conditions?
     def meets_conditions?(conditions, message)
@@ -74,13 +74,13 @@ module MIDIEye
     end
 
     # Trigger an event
-    def handle_event(event)
-      handler = event.handler
+    def handle_event(shifted_event)
+      handler = shifted_event.handler
       conditions = handler.conditions
-      return unless conditions.nil? || meets_conditions?(conditions, event[:message][:message])
+      return unless conditions.nil? || meets_conditions?(conditions, shifted_event.event[:message])
 
       begin
-        handler.proc.call(event[:message])
+        handler.proc.call(shifted_event.event)
       rescue StandardError => e
         Thread.main.raise(e)
       end

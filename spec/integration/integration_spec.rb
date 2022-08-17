@@ -1,10 +1,11 @@
 # frozen_string_literal: true
 
 require 'helper'
+require 'integration/helper'
 
 describe MIDIEye do
-  let(:input) { SpecHelper.devices[:input] }
-  let(:output) { SpecHelper.devices[:output] }
+  let(:input) { IntegrationSpecHelper.devices[:input] }
+  let(:output) { IntegrationSpecHelper.devices[:output] }
   let(:listener) { MIDIEye::Listener.new(input) }
   before { sleep 0.2 }
 
@@ -110,7 +111,7 @@ describe MIDIEye do
     end
   end
 
-  describe '#delete_event' do
+  describe 'delete event' do
     it 'deletes event' do
       event = nil
       listener.listen_for(name: :test) do |e|
@@ -121,7 +122,7 @@ describe MIDIEye do
       sleep 0.5
 
       expect(listener.event_handlers.count).to eq(1)
-      listener.delete_event(:test)
+      listener.event_handlers.delete(:test)
       expect(listener.event_handlers.count).to eq(0)
     end
   end

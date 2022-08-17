@@ -23,7 +23,7 @@ module MIDIEye
     def poll(&block)
       messages = @device.buffer.slice(@pointer, @device.buffer.length - @pointer)
       @pointer = @device.buffer.length
-      messages.compact.each { |raw_message| handle_message(raw_message, &block) }
+      messages.compact.map { |raw_message| handle_message(raw_message, &block) }
     end
 
     # If this source was created from the given input
@@ -42,7 +42,8 @@ module MIDIEye
         nil
       end
       objects = [parsed_messages].flatten.compact
-      yield(objects)
+      yield(objects) if block_given?
+      objects
     end
   end
 end
